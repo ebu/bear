@@ -1,0 +1,7 @@
+[submodule "visr_bear/submodules/rapidjson"]
+	path = visr_bear/submodules/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
+[submodule "visr_bear/submodules/libear"]
+	path = visr_bear/submodules/libear
+	url = https://github.com/ebu/libear.git
+	branch = extent_performance

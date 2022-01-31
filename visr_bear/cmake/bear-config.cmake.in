@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+find_package(VISR 0.11.0 REQUIRED)
+find_package(ear REQUIRED)
+
+if(NOT TARGET bear::bear)
+    include(${CMAKE_CURRENT_LIST_DIR}/bear-targets.cmake)
+endif()
