@@ -92,6 +92,8 @@ find_package(Threads REQUIRED)
 add_subdirectory(submodules)
 add_subdirectory(src)
 
+add_subdirectory(data)
+
 if(BUILD_PYTHON_BINDINGS)
   add_subdirectory(pythonwrappers)
 endif(BUILD_PYTHON_BINDINGS)
@@ -99,8 +101,6 @@ endif(BUILD_PYTHON_BINDINGS)
 if(BEAR_DEMO)
   add_subdirectory(demo)
 endif()
-
-add_subdirectory(data)
 
 if(BEAR_UNIT_TESTS)
   include(CTest)
