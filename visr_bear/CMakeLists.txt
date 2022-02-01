@@ -23,7 +23,7 @@ option(BEAR_PACKAGE_AND_INSTALL "Package and install bear" ${IS_ROOT_PROJECT})
 option(BEAR_UNIT_TESTS "Build units tests" ${IS_ROOT_PROJECT})
 
 option(BEAR_DOWNLOAD_DATA_DEFAULT "Download the default data file" ON)
-option(BEAR_DOWNLOAD_DATA_SMALL "Download the default small data file" OFF)
+option(BEAR_DOWNLOAD_DATA_DEFAULT_SMALL "Download the default small data file" OFF)
 
 set(BEAR_DATA_PATH_DEFAULT
     CACHE PATH "path to the default data file if externally provided")
