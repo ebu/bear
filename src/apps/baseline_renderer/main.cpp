@@ -56,7 +56,7 @@ int main( int argc, char const * const * argv )
                 return EXIT_SUCCESS;
             case Options::ParseResult::Version:
                 // TODO: Outsource the version string generation to a central file.
-                std::cout << "VISR S3A Baseline Renderer "
+                std::cout << "VISR Baseline Renderer "
                 << VISR_MAJOR_VERSION << "."
                 << VISR_MINOR_VERSION << "."
                 << VISR_PATCH_VERSION << std::endl;
@@ -177,7 +177,7 @@ int main( int argc, char const * const * argv )
         audioInterface->start( );
         
         // Rendering runs until q<Return> is entered on the console.
-        std::cout << "S3A baseline renderer running. Press \"q<Return>\" or Ctrl-C to quit." << std::endl;
+        std::cout << "VISR baseline renderer running. Press \"q<Return>\" or Ctrl-C to quit." << std::endl;
         char c;
         do
         {

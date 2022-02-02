@@ -7,7 +7,9 @@
 
 #include <libefl/vector_functions.hpp>
 
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
 #include <sndfile.h>
+#endif
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -48,6 +50,18 @@ VectorParameter<ElementType>::VectorParameter( VectorParameter<ElementType> cons
 template< typename ElementType >
 VectorParameter<ElementType>::~VectorParameter() = default;
 
+template< typename ElementType >
+VectorParameter<ElementType>& VectorParameter<ElementType>::operator=(VectorParameter<ElementType> const & rhs)
+{
+  if( this->size() != rhs.size() )
+  {
+    throw std::out_of_range( "VectorParameter assignment: Sizes are different." );
+  }
+  efl::BasicVector<ElementType>::copy( rhs );
+  return *this;
+}
+
+  
 namespace // unnamed
 {
 
@@ -131,6 +145,7 @@ VectorParameter<ElementType>::fromStream( std::istream & stream, std::size_t ali
   return VectorParameter<ElementType>::fromString( os.str(), alignment );
 }
 
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
 namespace // unnamed
 {
   /**
@@ -235,6 +250,7 @@ VectorParameter<ElementType>::fromAudioFile( std::string const & fileName, std::
     throw; // rethrow, i.e., pass the exception to the next level.
   }
 }
+#endif
 
 template< typename ElementType >
 /*static*/ VectorParameter<ElementType>

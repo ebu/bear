@@ -12,14 +12,12 @@ namespace visr
 namespace pml
 {
 
-TimeFrequencyParameterConfig::TimeFrequencyParameterConfig( std::size_t dftSize,
-                                                            std::size_t hopSize,
+TimeFrequencyParameterConfig::TimeFrequencyParameterConfig( std::size_t numberOfDftBins,
                                                             std::size_t numberOfChannels,
-                                                            std::size_t numberOfDftSamples )
+                                                            std::size_t numberOfFrames )
  : ParameterConfigBase()
- , mDftSize( dftSize )
- , mHopSize( hopSize )
- , mNumberOfDftSamples( numberOfDftSamples )
+ , mNumberOfDftBins( numberOfDftBins )
+ , mNumberOfFrames( numberOfFrames )
  , mNumberOfChannels(numberOfChannels)
 {
 }
@@ -45,10 +43,9 @@ bool TimeFrequencyParameterConfig::compare(ParameterConfigBase const & rhs) cons
 
 bool TimeFrequencyParameterConfig::compare(TimeFrequencyParameterConfig const & rhs) const
 {
-  return ( (rhs.dftSize() == dftSize() )
-    and (rhs.hopSize() == hopSize() )
+  return ( (rhs.numberOfDftBins() == numberOfDftBins() )
     and (rhs.numberOfChannels() == numberOfChannels())
-    and (rhs.numberOfDftSamples() == numberOfDftSamples()));
+    and (rhs.numberOfFrames() == numberOfFrames()));
 }
 
 } // namespace pml

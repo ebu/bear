@@ -27,18 +27,15 @@ namespace audiointerfaces
     struct Config
     {
     public:
-      /** Default contructor to initialise elements to defined values. */
-      //                Config()
-      //                : mClientName("")
-      //                , mServerName("")
-      //                , mPortJSONConfig("")
-      //                {}
-      
 
       Config(std::string cliName, std::string servName, boost::property_tree::ptree portsConfig,  bool autoConnect = false);
 
-      void loadPortConfig(boost::optional<boost::property_tree::ptree> tree, std::string & extClient, std::vector< std::string > &portNames,
-                          std::vector< std::string > & extPortNames, std::size_t numPorts, bool & autoConn, std::string porttype);
+      void loadPortConfig(boost::optional<boost::property_tree::ptree> tree,
+                          std::vector< std::string > &portNames,
+                          std::vector< std::string > & extPortNames,
+                          std::size_t numPorts,
+                          bool autoConn,
+                          std::string const & portType );
       std::string mClientName;
       std::string mInExtClientName;
       std::string mOutExtClientName;
@@ -52,6 +49,11 @@ namespace audiointerfaces
       std::vector< std::string > mCapturePortNames;
       
       std::vector< std::string > mPlaybackPortNames;
+
+      /**
+       * Whether to display verbose messages when connecting ports.
+       */
+      bool mVerbosePortConnections;
 
     };
     

@@ -42,6 +42,8 @@ endif(WIN32)
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME} signalflows_shared )
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME} maxsupport_shared )
 
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER max_msp_externals )
+
 install( TARGETS ${PROJECT_NAME}
          LIBRARY DESTINATION max COMPONENT max_externals
          RUNTIME DESTINATION max COMPONENT max_externals )

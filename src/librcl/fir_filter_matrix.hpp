@@ -14,6 +14,8 @@
 #include <libefl/basic_matrix.hpp>
 #include <libefl/basic_vector.hpp>
 
+#include <libpml/double_buffering_protocol.hpp>
+#include <libpml/filter_routing_parameter.hpp>
 #include <libpml/indexed_value_parameter.hpp>
 #include <libpml/message_queue_protocol.hpp>
 
@@ -53,7 +55,8 @@ public:
     None = 0,                ///< No control inputs
     Filters = 1 << 0,        ///< Filter control input active
     Routings = 1 << 1,       ///< Routing control input active
-    All = Filters | Routings ///< All control inputs active
+    AllRoutings = 1 << 2,    ///< Control input to replace all routings in a single message.  
+    All = Filters | Routings | AllRoutings ///< All control inputs active
   };
 
   /**
@@ -153,7 +156,17 @@ private:
    */
   AudioOutput mOutput;
 
-  std::unique_ptr<ParameterInput<pml::MessageQueueProtocol, pml::IndexedValueParameter< std::size_t, std::vector<SampleType > > > > mSetFilterInput;
+  using FilterInput = ParameterInput<pml::MessageQueueProtocol, pml::IndexedValueParameter< std::size_t, std::vector<SampleType > > >;
+
+  using SingleRoutingInput = ParameterInput<pml::MessageQueueProtocol, pml::FilterRoutingParameter >;
+
+  using AllRoutingsInput = ParameterInput<pml::DoubleBufferingProtocol, pml::FilterRoutingListParameter >;
+
+  std::unique_ptr< FilterInput > mSetFilterInput;
+
+  std::unique_ptr< SingleRoutingInput > mSingleRoutingInput;
+
+  std::unique_ptr< AllRoutingsInput > mAllRoutingsInput;
 
   std::unique_ptr<rbbl::MultichannelConvolverUniform<SampleType> > mConvolver;
 };

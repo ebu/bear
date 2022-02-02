@@ -26,7 +26,6 @@ class VISR_PANNING_LIBRARY_SYMBOL XYZ {
   * Default constructor.
   */
     XYZ();
- 
   /**
    * Constructor with specified coordinates.
    */
@@ -71,15 +70,18 @@ class VISR_PANNING_LIBRARY_SYMBOL XYZ {
         return 0;
   }
 
-  int normalise() {
+  /**
+   * Re-scale the vector to unit length.
+   * @return The length of the vector before the normalisation.
+   */
+  Afloat normalise() {
     Afloat l = getLength();
-      if (l != 0.0f ) {
-          x /= l;
-          y /= l;
-          z /= l;
-      }
-
-    return 0;
+    if (l != 0.0f ) {
+      x /= l;
+      y /= l;
+      z /= l;
+    }
+    return l;
   }
 };
 

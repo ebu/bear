@@ -6,9 +6,8 @@
 //
 
 
-#ifndef __S3A_renderer_dsp__listenerCompensation__
-
-#define __S3A_renderer_dsp__listenerCompensation__
+#ifndef VISR_LIBRCL_LISTENER_COMPENSATION_HPP_INCLUDED
+#define VISR_LIBRCL_LISTENER_COMPENSATION_HPP_INCLUDED
 
 #include "export_symbols.hpp"
 
@@ -103,4 +102,4 @@ private:
 } // namespace visr
 
 
-#endif /* defined(__S3A_renderer_dsp__LoudspeakerArray__) */
+#endif // #ifndef VISR_LIBRCL_LISTENER_COMPENSATION_HPP_INCLUDED

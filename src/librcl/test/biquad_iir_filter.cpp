@@ -24,8 +24,12 @@ BOOST_AUTO_TEST_CASE( InstantiateBiquad )
   SamplingFrequencyType const fs{48000};
   SignalFlowContext const ctxt( blockSize, fs );
 
-  rcl::BiquadIirFilter biquad( ctxt, "biquad", nullptr );
-  // TODO: Implement setup and checks!
+  std::size_t const numberOfChannels{ 3 };
+  std::size_t const numberOfSections{ 5 };
+  bool const controlInput{ true };
+
+  rcl::BiquadIirFilter biquad(ctxt, "biquad", nullptr,
+    numberOfChannels, numberOfSections, controlInput );
 }
 
 } // namespace test

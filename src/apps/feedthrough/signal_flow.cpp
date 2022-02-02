@@ -2,6 +2,9 @@
 
 #include "signal_flow.hpp"
 
+#include <libvisr/channel_list.hpp>
+
+// #include <algorithm>
 #include <array>
 #include <vector>
 
@@ -13,24 +16,37 @@ namespace feedthrough
 {
 
 Feedthrough::Feedthrough( SignalFlowContext & context,
-                          char const * name,
-                          CompositeComponent * parent )
+			  char const * name,
+			  CompositeComponent * parent,
+			  std::size_t inputChannels,
+			  std::size_t outputChannels )
  : CompositeComponent( context, name, parent )
- , mInput( "input", *this, 2 )
- , mOutput( "output", *this, 2 )
- , mSum( context, "Add", this, 2, 2)
+ , mInput( "input", *this, inputChannels )
+ , mOutput( "output", *this, outputChannels )
+ , mTerminator( context, "Terminator", this,
+		inputChannels > outputChannels ? inputChannels - outputChannels : 0 )
 {
-  audioConnection( mInput, {0,1},
-                   mSum.audioPort( "in0" ), { 0, 1 } );
-  audioConnection( mInput, { 0, 1 },
-                   mSum.audioPort( "in0" ), { 1, 0 } );
-  audioConnection( mSum.audioPort( "out0"), { 0, 1 },
-                   mOutput, { 0, 1 } );
+  if( inputChannels > outputChannels )
+  {
+    audioConnection( mInput, ChannelRange( 0, outputChannels ),
+		     mOutput, ChannelRange( 0, outputChannels ) );
+    audioConnection( mInput, ChannelRange( outputChannels, inputChannels ),
+		     mTerminator.audioPort("input"), ChannelRange( 0, inputChannels - outputChannels ) );
+  }
+  else
+  {
+    std::size_t startOutChannel{ 0 };
+    while( startOutChannel < outputChannels )
+    {
+      std::size_t currChannels = std::min( inputChannels, outputChannels-startOutChannel );
+      audioConnection( mInput, ChannelRange( 0, currChannels ),
+		       mOutput, ChannelRange( startOutChannel, startOutChannel+currChannels ) );
+      startOutChannel += currChannels;
+  }
+  }
 }
 
-Feedthrough::~Feedthrough( )
-{
-}
+Feedthrough::~Feedthrough( ) = default;
 
 } // namespace feedthrough
 } // namespace apps

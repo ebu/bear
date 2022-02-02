@@ -18,6 +18,8 @@ listener_compensation.cpp
 null_source.cpp
 object_gain_eq_calculator.cpp
 panning_calculator.cpp
+parameter_input_terminator.cpp
+parameter_output_terminator.cpp
 position_decoder.cpp
 rcl.cpp
 scene_decoder.cpp
@@ -49,8 +51,18 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PRO
 set_target_properties( ${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 set_target_properties( ${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_NAME "${PROJECT_NAME}_import" )
 
-target_link_libraries( ${PROJECT_NAME} PRIVATE rcl_shared ) 
+target_link_libraries( ${PROJECT_NAME} PRIVATE rcl_shared )
+target_link_libraries( ${PROJECT_NAME} PRIVATE pythonbindinghelpers )
 
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER python_externals )
+
+# Note: We export the target to enable dependent projects to query target properties
+# such as the library location.
 install(TARGETS ${PROJECT_NAME}
+        EXPORT VISR_python_externals_exports
         DESTINATION ${PYTHON_MODULE_INSTALL_DIRECTORY}
         COMPONENT python_externals )
+
+if( BUILD_TESTING )
+  add_subdirectory( test )
+endif( BUILD_TESTING )

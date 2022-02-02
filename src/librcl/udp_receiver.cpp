@@ -8,13 +8,18 @@
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <boost/bind/bind.hpp>
+#ifndef VISR_DISABLE_THREADS
 #include <boost/thread/locks.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/thread.hpp>
+#endif
+
 
 #include <ciso646>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 namespace visr
@@ -63,9 +68,11 @@ private:
     */
     std::deque< pml::StringParameter > mInternalMessageBuffer;
 
+#ifndef VISR_DISABLE_THREADS
     std::unique_ptr< boost::thread > mServiceThread;
 
     boost::mutex mMutex;
+#endif
 };
 
 UdpReceiver::UdpReceiver( SignalFlowContext const & context,
@@ -122,10 +129,14 @@ UdpReceiver::Impl::Impl( std::size_t port,
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred)
     );
+#ifdef VISR_DISABLE_THREADS
+    throw std::invalid_argument( "UdpReceiver: Asynchronous mode is not supported because threads are disabled." );
+#else
     if (mMode == Mode::Asynchronous)
     {
         mServiceThread.reset(new boost::thread(boost::bind(&boost::asio::io_service::run, mIoService)));
     }
+#endif // VISR_DISABLE_THREADS
 }
 
 UdpReceiver::Impl::~Impl()
@@ -134,10 +145,12 @@ UdpReceiver::Impl::~Impl()
   {
     mIoServiceInstance->stop();
   }
+#ifndef VISR_DISABLE_THREADS
   if( mServiceThread.get() != nullptr  )
   {
     mServiceThread->join();
   }
+#endif
 }
 
 void UdpReceiver::Impl::process( UdpReceiver::MessageOutput & messageOutput )
@@ -146,7 +159,9 @@ void UdpReceiver::Impl::process( UdpReceiver::MessageOutput & messageOutput )
   {
     mIoService->poll();
   }
+#ifndef VISR_DISABLE_THREADS
   boost::lock_guard<boost::mutex> lock( mMutex );
+#endif
   while( not mInternalMessageBuffer.empty() )
   {
     pml::StringParameter const & nextMsg = mInternalMessageBuffer.front();
@@ -159,7 +174,9 @@ void UdpReceiver::Impl::handleReceiveData( const boost::system::error_code& erro
                                            std::size_t numBytesTransferred )
 {
   {
+#ifndef VISR_DISABLE_THREADS
     boost::lock_guard<boost::mutex> lock( mMutex );
+#endif
     mInternalMessageBuffer.push_back( pml::StringParameter( std::string( &mReceiveBuffer[0], numBytesTransferred ) ) );
   }
   mSocket->async_receive_from( boost::asio::buffer(mReceiveBuffer),

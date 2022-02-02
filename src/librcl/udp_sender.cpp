@@ -8,13 +8,17 @@
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <boost/bind/bind.hpp>
+#ifndef VISR_DISABLE_THREADS
 #include <boost/thread/thread.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/lock_types.hpp>
+#endif
 
 #include <ciso646>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 namespace visr
@@ -67,9 +71,11 @@ private:
     */
     std::deque< pml::StringParameter > mInternalMessageBuffer;
 
+#ifndef VISR_DISABLE_THREADS
     std::unique_ptr< boost::thread > mServiceThread;
 
     boost::mutex mMutex;
+#endif
 };
 
 UdpSender::UdpSender( SignalFlowContext const & context,
@@ -129,10 +135,14 @@ UdpSender::Impl::Impl(UdpSender & parent,
     udp::endpoint localEndpoint(udp::v4(), static_cast<unsigned short>(sendPort));
     mSocket.reset(new udp::socket(*mIoService, localEndpoint));
 
+#ifdef VISR_DISABLE_THREADS
+    throw std::invalid_argument( "UdpSender: Asynchronous mode is not supported because threads are disabled." );
+#else
     if (mMode == Mode::Asynchronous)
     {
         mServiceThread.reset(new boost::thread(boost::bind(&boost::asio::io_service::run, mIoService)));
     }
+#endif
 }
 
 
@@ -142,10 +152,12 @@ UdpSender::Impl::~Impl()
   {
     mIoServiceInstance->stop();
   }
+#ifndef VISR_DISABLE_THREADS
   if( mServiceThread.get() != nullptr  )
   {
     mServiceThread->join();
   }
+#endif
 }
 
 void UdpSender::Impl::process( UdpSender::MessageInput & messageInput )
@@ -167,6 +179,10 @@ void UdpSender::Impl::process( UdpSender::MessageInput & messageInput )
     }
     break;
   case Mode::Asynchronous:
+#ifdef VISR_DISABLE_THREADS
+    // Shouldn't happen because this is already checked in the constructor.
+    throw std::logic_error( "UdpSender: Logic error: Asynchronous mode not supported because threads are disables." );
+#else
     {
       boost::lock_guard<boost::mutex> lock( mMutex );
       bool const transmissionPending = not mInternalMessageBuffer.empty();
@@ -186,6 +202,7 @@ void UdpSender::Impl::process( UdpSender::MessageInput & messageInput )
                                 boost::asio::placeholders::bytes_transferred ) );
       }
     }
+#endif
   }
 }
 
@@ -196,7 +213,9 @@ void UdpSender::Impl::handleSentData(const boost::system::error_code& error,
     {
         throw std::runtime_error("UdpSender: Asynchronous send operation resulted in an error.");
     }
+#ifndef VISR_DISABLE_THREADS
     boost::lock_guard<boost::mutex> lock(mMutex);
+#endif
     assert(not mInternalMessageBuffer.empty());
     pml::StringParameter & currMsg = mInternalMessageBuffer.front();
     if (currMsg.size() != numBytesTransferred)

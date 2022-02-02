@@ -31,11 +31,11 @@ def sph2cart(az,el,r):
 
 blockSize = 128
 samplingFrequency = 48000
-parameterUpdatePeriod = 1024
+parameterUpdatePeriod = 128
 
-numBlocks = 64;
+numBlocks = 1024;
 
-numChannels = 5;
+numChannels = 1;
 
 
 signalLength = blockSize * numBlocks
@@ -56,7 +56,11 @@ diffFiltersRaw = np.array(pml.MatrixParameterFloat.fromAudioFile( diffFilterFile
                           dtype = np.float32 )
 diffFilters = efl.BasicMatrixFloat( diffFiltersRaw[ np.array(lc.channelIndices() )-1,: ] )
 
-reverbConfigStr = '{ "numReverbObjects": %i, "discreteReflectionsPerObject": 20, "lateReverbFilterLength": 2.0, "lateReverbDecorrelationFilters": "%s/config/filters/random_phase_allpass_64ch_1024taps.wav" }' % (numChannels, visrBaseDirectory )
+reverbConfigStr = """{ "numReverbObjects": %i,
+ "discreteReflectionsPerObject": 20,
+ "lateReverbFilterLength": 5.0,
+ "lateReverbDecorrelationFilters": "%s/config/filters/random_phase_allpass_64ch_1024taps.wav"
+ }""" % (numChannels, visrBaseDirectory )
 
 renderer1 = signalflows.CoreRenderer( ctxt, 'renderer1', None,
                                       loudspeakerConfiguration=lc,
@@ -82,8 +86,10 @@ ro = obj_vector[0]
 paramInput = flow.parameterReceivePort('objectDataInput')
 
 inputSignal = np.zeros( (1, signalLength ), dtype=np.float32 )
-# inputSignal[0,:] = 0.75*np.sin( 2.0*np.pi*440 * t )
-inputSignal[ 0, 100 ] = 1 # Discrete Dirac
+# Note: In order to be rendered with the full gain, the Dirac must be placed
+# at least 'parameterUpdatePeriod' into the signal to avoid the initial fade-in of
+# the object gain vector and the panning gain matrices.
+inputSignal[ 0, 200 ] = 1 # Discrete Dirac
 
 outputSignal = np.zeros( (numOutputChannels, signalLength ), dtype=np.float32 )
 
@@ -97,7 +103,20 @@ for blockIdx in range(0,numBlocks):
     outputBlock = flow.process( inputBlock )
     outputSignal[:, blockIdx*blockSize:(blockIdx+1)*blockSize] = outputBlock
 
+rms = np.linalg.norm( outputSignal, axis=0 )
 
-plt.figure(1)
+plt.figure()
+plt.subplot(1,2,1)
 plt.plot( t, outputSignal[2,:], 'bo-', t, outputSignal[6,:], 'rx-',  t, outputSignal[21,:], 'm.-' )
+plt.title('Loudspeaker signals')
+plt.legend( ['M+000','M+030','B+000'] )
+plt.subplot(1,2,2)
+plt.plot( t, 20*np.log10(rms), 'm.-' )
+plt.title( 'RMS [dB]' )
+plt.ylim( -140, 10 )
+
 plt.show( block = False )
+
+
+
+

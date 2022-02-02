@@ -24,6 +24,7 @@ namespace rbbl
 namespace test
 {
 
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
 BOOST_AUTO_TEST_CASE( MultichannelConvolver )
 {
   static const std::size_t alignment = 8; // element
@@ -76,6 +77,7 @@ BOOST_AUTO_TEST_CASE( MultichannelConvolver )
     BOOST_CHECK_MESSAGE( *maxErr <= static_cast<SampleType>(4.0) * std::numeric_limits<SampleType>::epsilon(), "Convolution error exceeds 4*epsilon() for this datatype." );
   }
 }
+#endif
 
 } // namespace test
 } // namespace rbbl

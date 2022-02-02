@@ -16,15 +16,17 @@ namespace python
 {
 namespace rcl
 {
-
 namespace py = pybind11;
 
 void exportBiquadIirFilter( pybind11::module & m )
 {
   using visr::rcl::BiquadIirFilter;
+  using SampleType = visr::SampleType;
+  using visr::CompositeComponent;
+  using visr::SignalFlowContext;
 
-  py::class_<BiquadIirFilter, visr::AtomicComponent>( m, "BiquadIirFilter",
-R"( 
+  py::class_< BiquadIirFilter, AtomicComponent >( m, "BiquadIirFilter",
+                                                        R"( 
 Multichannel IIR filtering component based on second-order IIR sections (biquads).
 
 Audio ports:
@@ -35,16 +37,13 @@ Parameter ports:
   eqInput: Optional parameter input port for receiving updated EQ settings of type :obj:`pml.BiquadMatrixParameterFloat`.
            This port is activated by the constructor parameter `controlInputs` (default: :code:`True`)
 )" )
-    .def( py::init< SignalFlowContext const &, char const *,
-      CompositeComponent *,
-      std::size_t, std::size_t, bool>()
-     , py::arg( "context" )
-     , py::arg( "name" )
-     , py::arg( "parent" )
-     , py::arg( "numberOfChannels" )
-     , py::arg( "numberOfBiquads" )
-     , py::arg( "controlInput" ) = true,
-R"(Constructor that initialises all biquad IIR sections the default value (flat EQ).
+      .def(
+          py::init< SignalFlowContext const &, char const *,
+                    CompositeComponent *, std::size_t, std::size_t, bool >(),
+          py::arg( "context" ), py::arg( "name" ), py::arg( "parent" ),
+          py::arg( "numberOfChannels" ), py::arg( "numberOfBiquads" ),
+          py::arg( "controlInput" ) = true,
+          R"(Constructor that initialises all biquad IIR sections the default value (flat EQ).
 
 Args:
   context: (visr.SignalFlowContext) Common audio processing parameters 
@@ -55,41 +54,35 @@ Args:
   numberOfChannels: (int) The number of individual audio channels processed.
   numberOfBiquads: (int) The number of second-order sections processed per channels.
 )" )
-    .def( py::init< SignalFlowContext const &, char const *,
-      CompositeComponent *, std::size_t, std::size_t,
-      rbbl::BiquadCoefficient<SampleType> const &, bool>(),
-      py::arg( "context" ),
-      py::arg( "name" ),
-      py::arg( "parent" ),
-      py::arg( "numberOfChannels" ),
-      py::arg( "numberOfBiquads" ),
-      py::arg( "initialBiquad" ),
-      py::arg( "controlInput" ) = true,
-    "Constructor initialising all biquad IIR sections to the same given value." )
-    .def( py::init< SignalFlowContext const &, char const *, CompositeComponent *,
-                    std::size_t, std::size_t, rbbl::BiquadCoefficientList<SampleType> const &,
-                    bool>(),
-      py::arg( "context" ),
-      py::arg( "name" ),
-      py::arg( "parent" ),
-      py::arg( "numberOfChannels" ),
-      py::arg( "numberOfBiquads" ),
-      py::arg( "initialBiquads" ),
-      py::arg( "controlInput" ) = true,
-    "Constructor initialising all channels to the same sequence of biquad IIR sections" )
-    .def( py::init< SignalFlowContext const &, char const *, CompositeComponent *, std::size_t,
-                    std::size_t, rbbl::BiquadCoefficientMatrix<SampleType> const &, bool>(),
-      py::arg( "context" ),
-      py::arg( "name" ),
-      py::arg( "parent" ),
-      py::arg( "numberOfChannels" ),
-      py::arg( "numberOfBiquads" ),
-      py::arg( "initialBiquads" ),
-      py::arg( "controlInput" ) = true,
-    "Constructor initialising the biquad IIR sections to individual values." )
-    ;
+      .def( py::init< SignalFlowContext const &, char const *,
+                      CompositeComponent *, std::size_t, std::size_t,
+                      rbbl::BiquadCoefficient< SampleType > const &,
+                      bool >(),
+            py::arg( "context" ), py::arg( "name" ), py::arg( "parent" ),
+            py::arg( "numberOfChannels" ), py::arg( "numberOfBiquads" ),
+            py::arg( "initialBiquad" ), py::arg( "controlInput" ) = true,
+            "Constructor initialising all biquad IIR sections to the same "
+            "given value." )
+      .def( py::init< SignalFlowContext const &, char const *,
+                      CompositeComponent *, std::size_t, std::size_t,
+                      rbbl::BiquadCoefficientList< SampleType > const &,
+                      bool >(),
+            py::arg( "context" ), py::arg( "name" ), py::arg( "parent" ),
+            py::arg( "numberOfChannels" ), py::arg( "numberOfBiquads" ),
+            py::arg( "initialBiquads" ), py::arg( "controlInput" ) = true,
+            "Constructor initialising all channels to the same sequence of "
+            "biquad IIR sections" )
+      .def( py::init< SignalFlowContext const &, char const *,
+                      CompositeComponent *, std::size_t, std::size_t,
+                      rbbl::BiquadCoefficientMatrix< SampleType > const &,
+                      bool >(),
+            py::arg( "context" ), py::arg( "name" ), py::arg( "parent" ),
+            py::arg( "numberOfChannels" ), py::arg( "numberOfBiquads" ),
+            py::arg( "initialBiquads" ), py::arg( "controlInput" ) = true,
+            "Constructor initialising the biquad IIR sections to individual "
+            "values." );
 }
 
-} // namepace rcl
+} // namespace rcl
 } // namespace python
 } // namespace visr

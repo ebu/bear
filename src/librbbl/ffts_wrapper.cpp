@@ -18,8 +18,15 @@ template<>
 class FftsWrapper<float>::Impl
 {
 public:
-  Impl( std::size_t fftSize, std::size_t /*alignElements*/ )
+  Impl( std::size_t fftSize, std::size_t alignComplexElements )
   {
+#if defined(VISR_SYSTEM_PROCESSOR_x86_64) || defined(VISR_SYSTEM_PROCESSOR_armv7l)
+    // Internal, non-documented requirement in FFTS due to the use of aligned SSE or NEON loads.
+    if( alignComplexElements < 128 / (8 * sizeof(std::complex< float >)) )
+    {
+      throw std::invalid_argument( "FftsWrapper requires a minimum alignment of 2 complex elements" );
+    }
+#endif
     mFwdPlan = ffts_init_1d_real( fftSize, -1 );
     if( not mFwdPlan )
     {

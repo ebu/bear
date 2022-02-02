@@ -21,10 +21,20 @@ void exportTimeFrequencyInverseTransform( pybind11::module & m )
 {
   using visr::rcl::TimeFrequencyInverseTransform;
 
-  pybind11::class_<TimeFrequencyInverseTransform, visr::AtomicComponent>( m, "TimeFrequencyInverseTransform" )
-   .def( pybind11::init<visr::SignalFlowContext const&, char const *, visr::CompositeComponent*, std::size_t, std::size_t, std::size_t, char const*>(),
+  pybind11::class_<TimeFrequencyInverseTransform, visr::AtomicComponent> tfit( m, "TimeFrequencyInverseTransform" );
+
+  pybind11::enum_< TimeFrequencyInverseTransform::Normalisation >( tfit, "Normalisation")
+    .value( "One", TimeFrequencyInverseTransform::Normalisation::One )
+    .value( "Unitary", TimeFrequencyInverseTransform::Normalisation::Unitary )
+    .value( "OneOverN", TimeFrequencyInverseTransform::Normalisation::OneOverN )
+  ;
+
+  tfit
+   .def( pybind11::init<visr::SignalFlowContext const&, char const *, visr::CompositeComponent*, std::size_t, std::size_t, std::size_t, char const*,
+   TimeFrequencyInverseTransform::Normalisation >(),
      pybind11::arg("context"), pybind11::arg("name"), pybind11::arg("parent") = static_cast<visr::CompositeComponent*>(nullptr),
-     pybind11::arg( "numberOfChannels" ), pybind11::arg( "dftLength" ), pybind11::arg( "hopSize" ), pybind11::arg( "fftImplementation" ) = "default" )
+     pybind11::arg( "numberOfChannels" ), pybind11::arg( "dftSize" ), pybind11::arg( "hopSize" ), pybind11::arg( "fftImplementation" ) = "default",
+     pybind11::arg( "normalisation" ) = TimeFrequencyInverseTransform::Normalisation::OneOverN )
   ; 
 }
 

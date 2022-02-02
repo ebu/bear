@@ -9,6 +9,7 @@
 #include <iosfwd>
 #include <initializer_list>
 #include <set>
+#include <string>
 
 namespace visr
 {

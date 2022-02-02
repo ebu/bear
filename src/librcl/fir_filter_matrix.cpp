@@ -57,10 +57,18 @@ FirFilterMatrix::FirFilterMatrix( SignalFlowContext const & context,
     filterLength, maxRoutings, maxFilters,
     routings, filters, cVectorAlignmentSamples, fftImplementation ) )
 {
-  bool const filterInput = (controlInputs & ControlPortConfig::Filters) != ControlPortConfig::None;
-  mSetFilterInput.reset(filterInput
-    ? new ParameterInput<pml::MessageQueueProtocol, pml::IndexedValueParameter< std::size_t, std::vector<SampleType > > >("filterInput", *this, pml::EmptyParameterConfig())
-    : nullptr);
+  if( (controlInputs & ControlPortConfig::Filters) != ControlPortConfig::None )
+  {
+    mSetFilterInput.reset( new FilterInput("filterInput", *this, pml::EmptyParameterConfig()) );
+  }
+  if( (controlInputs & ControlPortConfig::Routings) != ControlPortConfig::None )
+  {
+    mSingleRoutingInput.reset( new SingleRoutingInput( "singleRouting", *this, pml::EmptyParameterConfig() ) );
+  }
+  if( (controlInputs & ControlPortConfig::AllRoutings) != ControlPortConfig::None )
+  {
+    mAllRoutingsInput.reset( new AllRoutingsInput( "allRoutings", *this, pml::EmptyParameterConfig() ) );
+  }
 }
 
 FirFilterMatrix::~FirFilterMatrix() = default;
@@ -85,7 +93,37 @@ void FirFilterMatrix::process()
       }
     }
   }
-
+  // If mSingleRoutingInput and mAllRoutingsInput are both defined, the 'all routings' message is handled first.
+  // That means that single routings messages are applied on top of the new complete routing, i.e., they are not lost.
+  if( mAllRoutingsInput and mAllRoutingsInput->changed() )
+  {
+    rbbl::FilterRoutingList const & routings{ mAllRoutingsInput->data() };
+    try
+    {
+      setRoutings( routings );
+    }
+    catch( std::exception const & ex )
+    {
+      status( StatusMessage::Error, "FirFilterMatrix: Error while resetting filter routings: ", ex.what() );
+    }
+    mAllRoutingsInput->resetChanged();
+  }
+  if( mSingleRoutingInput )
+  {
+    while( not mSingleRoutingInput->empty() )
+    {
+      try
+      {
+        rbbl::FilterRouting const & entry{ mSingleRoutingInput->front() };
+        addRouting( entry );
+      }
+      catch( std::exception const & ex )
+      {
+        status( StatusMessage::Error, "FirFilterMatrix: Error while setting filter routing: ", ex.what() );      
+      }      
+      mSingleRoutingInput->pop();
+    }
+  }
   mConvolver->process( mInput.data(), mInput.channelStrideSamples(), 
                        mOutput.data(), mOutput.channelStrideSamples(),
                        cVectorAlignmentSamples );

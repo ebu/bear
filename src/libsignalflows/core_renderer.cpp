@@ -32,22 +32,37 @@ namespace signalflows
 
 namespace // unnamed
 {
-  /**
-   * Create a routing that routes \p numChannels input signals to the corresponding output using an individual filter with the same index.
-   * @param numChannels The number of input signals, which are translated to the indices 0..numChannels-1
-   * @todo Consider to make this an utility function (e.g., in librbbl)
-   */
-  rbbl::FilterRoutingList oneToOneRouting(std::size_t numChannels)
+/**
+ * Create a routing that routes \p numChannels input signals to the
+ * corresponding output using an individual filter with the same index.
+ * @param numChannels The number of input signals, which are translated to the
+ * indices 0..numChannels-1
+ * @todo Consider to make this an utility function (e.g., in librbbl)
+ */
+rbbl::FilterRoutingList oneToOneRouting( std::size_t numChannels )
+{
+  rbbl::FilterRoutingList res;
+  for( std::size_t chIdx( 0 ); chIdx < numChannels; ++chIdx )
   {
-    rbbl::FilterRoutingList res;
-    for (std::size_t chIdx(0); chIdx < numChannels; ++chIdx)
-    {
-      res.addRouting(chIdx, chIdx, chIdx, 1.0f);
-    }
-    return res;
+    res.addRouting( chIdx, chIdx, chIdx, 1.0f );
   }
+  return res;
 }
-// unnamed namespace
+
+// Static crossover pair (2nd-order Linkwitz-Riley with cutoff 700 Hz @ fs=48
+// kHz)
+static rbbl::BiquadCoefficient< SampleType > const lowpass{
+  0.001921697757295f, 0.003843395514590f, 0.001921697757295f,
+  -1.824651307057289f, 0.832338098086468f
+};
+// Numerator coeffs are negated to account for the 180 degree phase shift of the
+// original design.
+static rbbl::BiquadCoefficient< SampleType > const highpass{
+  -0.914247351285939f, 1.828494702571878f, -0.914247351285939f,
+  -1.824651307057289f, 0.832338098086468f
+};
+
+} // unnamed namespace
 
 CoreRenderer::CoreRenderer( SignalFlowContext const & context,
                             char const * name,
@@ -67,13 +82,17 @@ CoreRenderer::CoreRenderer( SignalFlowContext const & context,
  , mObjectVectorInput( "objectDataInput", *this, pml::EmptyParameterConfig() )
  , mObjectInputGainEqCalculator( context, "ObjectGainEqCalculator", this, numberOfInputs, numberOfObjectEqSections )
  , mObjectGain( context, "ObjectGain", this )
- , mObjectEq( context, "ObjectEq", this )
+ , mObjectEq( context,
+              "ObjectEq",
+              this,
+              numberOfInputs,
+              numberOfObjectEqSections,
+              true /* Enable control input */ )
  , mOutputAdjustment( context, "OutputAdjustment", this )
  , mGainCalculator( context, "VbapGainCalculator", this, numberOfInputs, loudspeakerConfiguration, not trackingConfiguration.empty(),
                     frequencyDependentPanning ? rcl::PanningCalculator::PanningMode::All : (rcl::PanningCalculator::PanningMode::LF | rcl::PanningCalculator::PanningMode::Diffuse) )
  , mVbapMatrix( context, "VbapGainMatrix", this )
  , mVbipMatrix( frequencyDependentPanning ? new rcl::GainMatrix( context, "VbipMatrix", this ) : nullptr)
- , mPanningFilterbank( frequencyDependentPanning ? new rcl::BiquadIirFilter( context, "PanningFilterbank", this ) : nullptr )
  , mDiffuseMatrix( context, "DiffuseMatrix", this )
  , mDecorrelator( context, "DiffusePartDecorrelator", this, loudspeakerConfiguration.getNumRegularSpeakers(),
                   loudspeakerConfiguration.getNumRegularSpeakers(), diffusionFilters.numberOfColumns(),
@@ -125,8 +144,9 @@ CoreRenderer::CoreRenderer( SignalFlowContext const & context,
       throw std::invalid_argument( "BaselineRenderer: Size of the output EQ configuration config differs from "
                                    "the number of output signals (regular loudspeakers + subwoofers).");
     }
-    mOutputEqualisationFilter.reset( new rcl::BiquadIirFilter( context, "OutputEqualisationFilter", this ) );
-    mOutputEqualisationFilter->setup( numberOfOutputSignals, outputEqSections, eqConfig );
+    mOutputEqualisationFilter.reset( new rcl::BiquadIirFilter(
+        context, "OutputEqualisationFilter", this, numberOfOutputSignals,
+        outputEqSections, eqConfig ) );
   }
 
   parameterConnection(mObjectVectorInput, mObjectInputGainEqCalculator.parameterPort("objectIn") );
@@ -134,8 +154,6 @@ CoreRenderer::CoreRenderer( SignalFlowContext const & context,
   audioConnection( mObjectSignalInput, mObjectGain.audioPort("in") );
   parameterConnection( mObjectInputGainEqCalculator.parameterPort("gainOut"), mObjectGain.parameterPort("gainInput"));
 
-
-  mObjectEq.setup( numberOfInputs, numberOfObjectEqSections, true /* Enable control input */ );
   audioConnection( mObjectGain.audioPort("out"), mObjectEq.audioPort("in") );
   parameterConnection( mObjectInputGainEqCalculator.parameterPort("eqOut"), mObjectEq.parameterPort("eqInput"));
 
@@ -143,21 +161,15 @@ CoreRenderer::CoreRenderer( SignalFlowContext const & context,
   audioConnection( mVbapMatrix.audioPort("out"), mDirectDiffuseMix.audioPort("in0") );
   if( frequencyDependentPanning )
   {
-    // Static crossover pair (2nd-order Linkwitz-Riley with cutoff 700 Hz @ fs=48 kHz)
-    static rbbl::BiquadCoefficient<SampleType> const lowpass{ 0.001921697757295f, 0.003843395514590f, 0.001921697757295f,
-        -1.824651307057289f, 0.832338098086468f };
-    // Numerator coeffs are negated to account for the 180 degree phase shift of the original design.
-    static rbbl::BiquadCoefficient<SampleType> const highpass{ -0.914247351285939f, 1.828494702571878f, -0.914247351285939f,
-        -1.824651307057289f, 0.832338098086468f };
-
-    rbbl::BiquadCoefficientMatrix<SampleType> coeffMatrix( 2*numberOfInputs, 1 );
-    for( std::size_t chIdx(0); chIdx < numberOfInputs; ++chIdx )
+    rbbl::BiquadCoefficientMatrix< SampleType > coeffMatrix( 2 * numberOfInputs,
+                                                             1 );
+    for( std::size_t chIdx( 0 ); chIdx < numberOfInputs; ++chIdx )
     {
       coeffMatrix( chIdx, 0 ) = lowpass;
       coeffMatrix( chIdx + numberOfInputs, 0 ) = highpass;
     }
-
-    mPanningFilterbank->setup( 2*numberOfInputs, 1, coeffMatrix );
+    mPanningFilterbank.reset( new rcl::BiquadIirFilter(context, "PanningFilterbank", this,
+       2*numberOfInputs, 1, coeffMatrix ) );
     mVbipMatrix->setup( numberOfInputs, numberOfLoudspeakers, interpolationPeriod, 0.0f );
     parameterConnection( mGainCalculator.parameterPort("vbipGains"), mVbipMatrix->parameterPort( "gainInput") );
 

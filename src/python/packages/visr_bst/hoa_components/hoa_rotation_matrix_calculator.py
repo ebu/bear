@@ -96,7 +96,7 @@ class HoaRotationMatrixCalculator( visr.AtomicComponent ):
                                                       pml.EmptyParameterConfig() )
             self.orientationInputProtocol = self.orientationInput.protocolInput()
         else:
-            self.orientationInputProtocol is None
+            self.orientationInputProtocol = None
 
         if initialOrientation is None:
             initialOrientation = np.zeros( (3), np.float32 )

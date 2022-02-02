@@ -12,7 +12,6 @@
 #include <libvisr/parameter_input.hpp>
 
 #include <librcl/add.hpp>
-#include <librcl/biquad_iir_filter.hpp>
 #include <librcl/delay_vector.hpp>
 #include <librcl/gain_matrix.hpp>
 #include <librcl/signal_routing.hpp>
@@ -35,7 +34,8 @@ namespace visr
 // Forward declaration
 namespace rcl
 {
-  class FirFilterMatrix;
+class FirFilterMatrix;
+class BiquadIirFilter;
 }
 
 namespace reverbobject
@@ -87,7 +87,7 @@ private:
 
   rcl::DelayVector mDiscreteReverbDelay;
 
-  rcl::BiquadIirFilter mDiscreteReverbReflFilters;
+  std::unique_ptr< rcl::BiquadIirFilter > mDiscreteReverbReflFilters;
 
   rcl::GainMatrix mDiscreteReverbPanningMatrix;
 

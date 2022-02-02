@@ -1,7 +1,7 @@
 /* Copyright Institute of Sound and Vibration Research - All rights reserved */
 
-#ifndef VISR_RBBL_FILTER_ROUTING_PARAMETER_HPP_INCLUDED
-#define VISR_RBBL_FILTER_ROUTING_PARAMETER_HPP_INCLUDED
+#ifndef VISR_RBBL_SPARSE_GAIN_ROUTING_HPP_INCLUDED
+#define VISR_RBBL_SPARSE_GAIN_ROUTING_HPP_INCLUDED
 
 #include "export_symbols.hpp"
 
@@ -9,6 +9,7 @@
 #include <iosfwd>
 #include <initializer_list>
 #include <set>
+#include <string>
 
 namespace visr
 {

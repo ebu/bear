@@ -4,7 +4,6 @@ set( SOURCES
 audiointerfaces.cpp
 audio_interface.cpp
 audio_interface_factory.cpp
-portaudio_interface.cpp
 )
 
 set( HEADERS
@@ -12,10 +11,13 @@ set( HEADERS
 # We don't need header files
 
 
-if( BUILD_USE_JACK )
+if( BUILD_AUDIOINTERFACES_PORTAUDIO )
+  list( APPEND SOURCES portaudio_interface.cpp )
+endif( BUILD_AUDIOINTERFACES_PORTAUDIO )
+
+if( BUILD_AUDIOINTERFACES_JACK )
   list( APPEND SOURCES jack_interface.cpp )
-  set_source_files_properties( audiointerfaces.cpp PROPERTIES COMPILE_DEFINITIONS VISR_BUILD_USE_JACK )
-endif( BUILD_USE_JACK )
+endif( BUILD_AUDIOINTERFACES_JACK )
 
 set(PROJECT_NAME audiointerfacespython)
 
@@ -37,6 +39,11 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE audiointerfaces_shared )
 target_link_libraries( ${PROJECT_NAME} PRIVATE rrl_shared )
 target_link_libraries( ${PROJECT_NAME} PRIVATE Boost::boost ) # Adds the boost include directory
 
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER python_externals )
+
+# Note: We export the target to enable dependent projects to query target properties
+# such as the library location.
 install(TARGETS ${PROJECT_NAME}
+        EXPORT VISR_python_externals_exports
         DESTINATION ${PYTHON_MODULE_INSTALL_DIRECTORY}
         COMPONENT python_externals )

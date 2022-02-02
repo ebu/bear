@@ -229,7 +229,8 @@ void ReverbParameterCalculator::processSingleObject( objectmodel::PointSourceWit
     objectmodel::PointSourceWithReverb::DiscreteReflection const & discRefl = rsao.discreteReflection( srcIdx );
     std::size_t const matrixIdx = startIdx + srcIdx;
 
-    mVbapCalculator->calculateGains( discRefl.positionX(), discRefl.positionY(), discRefl.positionZ(), mTmpPanningGains.data() );
+    mVbapCalculator->calculateGains( discRefl.positionX(), discRefl.positionY(), discRefl.positionZ(), mTmpPanningGains.data(),
+                                     false /*planeWave=false means discrete reflections are considered as point sources.*/ );
     efl::ErrorCode const res = efl::vectorCopyStrided( mTmpPanningGains.data(), &discretePanningMatrix(0, matrixIdx ), 1, 
       discretePanningMatrix.stride(), mNumberOfPanningLoudspeakers, 0 /*no assumptions on stride possible*/ );
     if( res != efl::noError )
@@ -245,7 +246,7 @@ void ReverbParameterCalculator::processSingleObject( objectmodel::PointSourceWit
     }
 
     // Set the gain and delay for each discrete reflection
-    discreteReflGains[matrixIdx] = rsao.level() * discRefl.level();
+    discreteReflGains[matrixIdx] = discRefl.level();
     discreteReflDelays[matrixIdx] = discRefl.delay();
   }
 
@@ -271,8 +272,13 @@ void ReverbParameterCalculator::processSingleObject( objectmodel::PointSourceWit
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Late reflection part.
+
+  // TODO: As of now, both the gain and dely are unused. If it remains this way, 
+  // consider to remove the 'LateReverbGainDelay' component and associated
+  // parameter connections from the reverb renderer signal flow.
   lateReverbDelays[renderChannel] = 0.0f; // Unused for now.  We might apply the frequency-independent offset delay here.
-  lateReverbGains[renderChannel] = rsao.level(); // Adjust to the object level.
+  lateReverbGains[renderChannel] = 1.0f; // The object level is already applied
+  // to the audio signal received in the reverb renderer.
   if( not equal( mPreviousLateReverbs[renderChannel], rsao.lateReverb(), cLateReverbParameterComparisonLimit ))
   {
     mPreviousLateReverbs[renderChannel] = rsao.lateReverb();

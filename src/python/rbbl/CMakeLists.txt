@@ -5,12 +5,17 @@ biquad_coefficient.cpp
 core_convolver_uniform.cpp
 crossfading_convolver_uniform.cpp
 filter_routing.cpp
+fractional_delay_base.cpp
+fractional_delay_factory.cpp
 interpolating_convolver_uniform.cpp
 interpolation_parameter.cpp
+lagrange_interpolator.cpp
 multichannel_convolver_uniform.cpp
 object_channel_allocator.cpp
 parametric_iir_coefficient.cpp
 parametric_iir_coefficient_calculator.cpp
+position_3d.cpp
+quaternion.cpp
 sparse_gain_routing.cpp
 rbbl.cpp
 )
@@ -35,6 +40,15 @@ set_target_properties( ${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_NAME "${PROJECT
 
 target_link_libraries( ${PROJECT_NAME} PRIVATE rbbl_shared )
 
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER python_externals )
+
+# Note: We export the target to enable dependent projects to query target properties
+# such as the library location.
 install(TARGETS ${PROJECT_NAME}
+        EXPORT VISR_python_externals_exports
         DESTINATION ${PYTHON_MODULE_INSTALL_DIRECTORY}
         COMPONENT python_externals )
+
+if( BUILD_TESTING )
+  add_subdirectory( test )
+endif( BUILD_TESTING )

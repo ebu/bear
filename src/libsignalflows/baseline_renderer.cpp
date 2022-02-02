@@ -60,7 +60,7 @@ BaselineRenderer::BaselineRenderer( SignalFlowContext const & context,
   if( not trackingConfiguration.empty() )
   {
     mTrackingReceiver.reset( new rcl::UdpReceiver( context, "TrackingReceiver", this, 8888, rcl::UdpReceiver::Mode::Synchronous) );
-    mTrackingPositionDecoder.reset( new rcl::PositionDecoder( context, "TrackingPositionDecoder", this, panning::XYZ( 0.0f, 0.0f, 0.0f ) ) );
+    mTrackingPositionDecoder.reset( new rcl::PositionDecoder( context, "TrackingPositionDecoder", this ) );
     parameterConnection( mTrackingPositionDecoder->parameterPort("positionOutput"), mCoreRenderer.parameterPort("trackingPositionInput") );
   }
 }

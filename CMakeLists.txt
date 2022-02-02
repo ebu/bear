@@ -4,7 +4,8 @@
 
 # 3.0.0+ needed for export(EXPORT) command in src/CMakeLists.txt
 # >= 3.1 for CMAKE_CXX_STANDARD
-CMAKE_MINIMUM_REQUIRED (VERSION 3.1.0)
+# 3.3 for IN_LIST operator in if() conditions
+CMAKE_MINIMUM_REQUIRED (VERSION 3.3.0)
 
 # Avoid warnings about the CXX_VISIBILITY_PRESET set for all target types.
 if( POLICY CMP0063 ) # (only if the CMake version supports this policy
@@ -14,6 +15,23 @@ endif( POLICY CMP0063 )
 if( POLICY CMP0074 )
   CMAKE_POLICY(SET CMP0074 NEW)
 endif( POLICY CMP0074 )
+if( POLICY CMP0057 )
+  CMAKE_POLICY(SET CMP0057 NEW)
+else( POLICY CMP0057 )
+  message( FATAL_ERROR "Policy CMP0057 not supported (IN_LIST operator), although CMake version requirement is met.")
+endif( POLICY CMP0057 )
+if( POLICY CMP0090 ) # Disable writing into CMake registry.
+  CMAKE_POLICY(SET CMP0090 NEW) # Do not write into the package registry.
+else( POLICY CMP0090 )
+  set( CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON ) # Emulate the NEW behaviour)
+endif( POLICY CMP0090 )
+# Enable setting the runtime library type on MSVC platforms.
+# This is done by setting CMAKE_MSVC_RUNTIME_LIBRARY, for example
+# -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>
+if( POLICY CMP0091 )
+  CMAKE_POLICY(SET CMP0091 NEW)
+endif( POLICY CMP0091 )
+
 
 # The name of our top-level project.
 PROJECT( VISR CXX C )
@@ -21,8 +39,8 @@ PROJECT( VISR CXX C )
 # Define central version numbers for the project
 # TODO: Decide whether to move that to an external CMake file .
 set( VISR_MAJOR_VERSION 0 )
-set( VISR_MINOR_VERSION 12 )
-set( VISR_PATCH_VERSION 2 )
+set( VISR_MINOR_VERSION 13 )
+set( VISR_PATCH_VERSION 0 )
 
 add_definitions( -DVISR_MAJOR_VERSION=${VISR_MAJOR_VERSION} )
 add_definitions( -DVISR_MINOR_VERSION=${VISR_MINOR_VERSION} )
@@ -31,7 +49,7 @@ add_definitions( -DVISR_PATCH_VERSION=${VISR_PATCH_VERSION} )
 # Add support for unit tests
 INCLUDE( CTest )
 
-## Set C++ standard used. 
+## Set C++ standard used.
 
 # Enable C++ 11 support
 # This requires CMake >= 3.1
@@ -46,8 +64,7 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
-
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_modules")
 
 # Default path for static libraries
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/staticlib )
@@ -71,7 +88,16 @@ SET( VISR_SYSTEM_NAME ${CMAKE_SYSTEM_NAME} )
 if( VISR_SYSTEM_NAME MATCHES "Darwin" )
   set( VISR_SYSTEM_NAME MacOS ) # Replace CMake's name for MacOS X by a more descriptive one.
 
-  set( CMAKE_INSTALL_PREFIX /Applications/${VISR_VERSIONED_NAME})
+  IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    SET(CMAKE_INSTALL_PREFIX /Applications/${VISR_VERSIONED_NAME} CACHE PATH "install prefix" FORCE)
+  ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+endif( VISR_SYSTEM_NAME MATCHES "Darwin" )
+
+# Allow disabling of setting rpath - parent projects may want to customise it, based on installation
+OPTION( AUTOSET_RPATH "Automatically set rpath" ON )
+if(AUTOSET_RPATH)
+  
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/3rd;${CMAKE_INSTALL_PREFIX}/lib")
 
   # Activate rpath support
   set( CMAKE_MACOSX_RPATH ON)
@@ -80,11 +106,11 @@ if( VISR_SYSTEM_NAME MATCHES "Darwin" )
   set( CMAKE_BUILD_WITH_INSTALL_NAME_DIR TRUE)
   # When building, set the rpath to the libraries in the build tree, not to the install tree
   set( CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-  set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/3rd;${CMAKE_INSTALL_PREFIX}/lib")
+
   # Add the automatically determined parts of the RPATH
   # which point to directories outside the build tree to the install RPATH
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-endif( VISR_SYSTEM_NAME MATCHES "Darwin" )
+endif(AUTOSET_RPATH)
 
 SET( VISR_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR} )
 IF( VISR_SYSTEM_PROCESSOR MATCHES "AMD64" )
@@ -111,18 +137,22 @@ ADD_DEFINITIONS("-DVISR_PLATFORM_NAME_${VISR_PLATFORM_NAME_MACRO}")
 if(UNIX)
   # Support for the Raspberry Pi: Enable hardware floating-point arithmetic
   if( ${VISR_SYSTEM_PROCESSOR} MATCHES "armv7l" )
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon -march=armv7-a -mfloat-abi=hard" )
+    add_compile_options( -mfpu=neon -march=armv7-a -mfloat-abi=hard )
   endif( ${VISR_SYSTEM_PROCESSOR} MATCHES "armv7l" )
   # TODO: Add more elaborate configuration for -march and -mtune
   # At the moment, the code is invariably built for the architecture
   # features of the machine it is compiled on.
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall --pedantic" )
+  add_compile_options( -Wall --pedantic )
   # Avoid super-picky 'nested anon types' warning
   if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang") # Matches regular Clang and AppleClang (XCode)
     # message( STATUS "Detected LLVM C++ compiler" )
     # Remove nonsensical warnings due to unknown pragmas introduced by -pedantic
     # (as pragmas are compiler-specific, unknown ones should be ignored silently anyway)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-nested-anon-types -Wno-unknown-pragmas" )
+    add_compile_options( -Wno-nested-anon-types -Wno-unknown-pragmas )
+    # Avoid warnings if (static) member variables of templates are not explicitly defined in the same translation unit.
+    # This happens, for example, with the function pointer dispatch mechanism in libefl.
+    # A missing definition of a variable in question results in an undefined reference at the linking stage anyway.
+    add_compile_options( -Wno-undefined-var-template )
   endif (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 endif(UNIX)
 
@@ -144,14 +174,76 @@ if( WIN32 ) # Covers 64-bit Windows as well
   add_definitions( -D_SCL_SECURE_NO_WARNINGS ) # STL algorithms with pointers instead of 'real' iterators are perfectly legal.
   # Avoid complaints about STL members in classes with VISR_CORE_LIBRARY_SYMBOL not having DLL interfaces.
   add_definitions( "/wd4251" )
-  #
-#   ADD_DEFINITIONS( "/W3 /D_CRT_SECURE_NO_WARNINGS /wd4005 /wd4996 /wd4251 /nologo" )
-   add_definitions( "-D_WIN32_WINNT=0x0601" )
 
+  # TODO: Fine to remove commented-out next line?
+  # add_definitions( "/W3 /D_CRT_SECURE_NO_WARNINGS /wd4005 /wd4996 /wd4251 /nologo" )
+  add_definitions( "-D_WIN32_WINNT=0x0601" )
 
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3" ) # Increase warning level (/W4 and /Wall generate lots of output not related to coding flaws.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}")
+  add_compile_options( /W3 ) # Increase warning level (/W4 and /Wall generate lots of output not related to coding flaws.
 endif( WIN32 )
+
+############################################################
+# Set architecture options.
+set( BUILD_PROCESSOR_GENERATION "generic" CACHE STRING "CPU Architecture for which the binaries are built." )
+if( ${VISR_SYSTEM_PROCESSOR} MATCHES "x86_64" )
+  # These values work both for GCC and CLANG
+  set( PROCESSOR_GENERATION_LIST "generic;native;skylake-avx512;skylake;broadwell;haswell;ivybridge;sandybridge;westmere;nehalem"  )
+endif( ${VISR_SYSTEM_PROCESSOR} MATCHES "x86_64" )
+set_property( CACHE BUILD_PROCESSOR_GENERATION PROPERTY STRINGS ${PROCESSOR_GENERATION_LIST} )
+
+if( ${VISR_SYSTEM_PROCESSOR} MATCHES "x86_64" )
+  if( WIN32 )
+    # TODO: Translate into Windows flags (AFAIK only
+    # /arch:AVX and /arch:AVX2 are supported)
+  else( WIN32 )
+    # '-march=generic' is not supported by GCC and Clang
+    # because it is the default anyway.
+    if( NOT ${BUILD_PROCESSOR_GENERATION} MATCHES "generic" )
+        add_compile_options( -march=${BUILD_PROCESSOR_GENERATION} )
+    endif( NOT ${BUILD_PROCESSOR_GENERATION} MATCHES "generic" )
+    # Tune for the same architecture.
+    # This might make a difference especially if '-march=native' is chosen.
+    # https://lemire.me/blog/2018/07/25/it-is-more-complicated-than-i-thought-mtune-march-in-gcc/
+    add_compile_options( -mtune=${BUILD_PROCESSOR_GENERATION} )
+  endif( WIN32 )
+endif( ${VISR_SYSTEM_PROCESSOR} MATCHES "x86_64" )
+
+# TODO: Generate architecture flags for other platforms (e.g., ARM)
+
+############################################################
+# Logic for building, using, and installing libraries
+
+option( BUILD_INSTALL_SHARED_LIBRARIES "Whether to provide shared libraries in the installation packages." ON )
+option( BUILD_INSTALL_STATIC_LIBRARIES "Whether to provide static libraries in the installation packages." OFF )
+option( BUILD_INSTALL_STATIC_PIC_LIBRARIES "Whether to provide static position-independent libraries in the installation packages." OFF )
+
+set( BUILD_LIBRARY_TYPE_FOR_APPS "shared" CACHE STRING "The library type used for standalone applications." )
+set( VISR_LIBRARY_TYPES "shared;static" )
+set_property( CACHE BUILD_LIBRARY_TYPE_FOR_APPS PROPERTY STRINGS ${VISR_LIBRARY_TYPES} )
+
+# We need to know whether the standalone applications are built, because this influences which
+# library types are built.
+option( BUILD_STANDALONE_APPLICATIONS "Whether to build the standalone VISR applications." ON)
+
+# List to contain the library variants (static, shared, static_pic) to be built.
+# Start with an empty list which is populated below
+set( VISR_BUILD_LIBRARY_TYPES )
+# Decide which library types are built and store them in a list that is used in
+# subdirectories.
+# Static libraries are built if they are used in the standalone applications or
+# if they are to be installed.
+if( (BUILD_STANDALONE_APPLICATIONS AND (BUILD_LIBRARY_TYPE_FOR_APPS STREQUAL "static"))
+  OR BUILD_INSTALL_STATIC_LIBRARIES )
+  list( APPEND VISR_BUILD_LIBRARY_TYPES "static")
+endif( (BUILD_STANDALONE_APPLICATIONS AND (BUILD_LIBRARY_TYPE_FOR_APPS STREQUAL "static"))
+  OR BUILD_INSTALL_STATIC_LIBRARIES )
+if( BUILD_INSTALL_SHARED_LIBRARIES )
+  list( APPEND VISR_BUILD_LIBRARY_TYPES "shared")
+endif( BUILD_INSTALL_SHARED_LIBRARIES )
+if( BUILD_INSTALL_STATIC_PIC_LIBRARIES )
+  list( APPEND VISR_BUILD_LIBRARY_TYPES "static_pic" )
+endif( BUILD_INSTALL_STATIC_PIC_LIBRARIES )
+
 
 ############################################################
 # Create universal binaries on MacOS
@@ -169,9 +261,6 @@ if( VISR_SYSTEM_NAME MATCHES "MacOS" )
 #  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
 endif( VISR_SYSTEM_NAME MATCHES "MacOS" )
-
-
-
 
 ############################################################
 # Set default visibility of shared library symbols to hidden (as on Windows platforms)
@@ -207,92 +296,149 @@ ENDIF(  WIN32 OR APPLE )
 
 ################################################################################
 # Support for Python bindings of selected VISR functionality
-OPTION( BUILD_PYTHON_BINDINGS "Python bindings of selected VISR functionality" OFF )
+option( BUILD_PYTHON_BINDINGS "Python bindings of selected VISR functionality" ON )
 
-IF( BUILD_PYTHON_BINDINGS )
-  # Note: Disabled due to some Python binaries not working (probably due to PYTHONHOME set)
-  # if(NOT BUILD_VISR_PYTHON_VERSION)
-  #   set( BUILD_VISR_PYTHON_VERSION "" CACHE STRING "Version string to set used Python version" )
-  # endif(NOT BUILD_VISR_PYTHON_VERSION)
-  # set(Python_ADDITIONAL_VERSIONS 3.7 3.6 3.5 3.4 2.7)
-  # find_package(PythonLibsNew ${BUILD_VISR_PYTHON_VERSION} REQUIRED)
+if( BUILD_PYTHON_BINDINGS )
+  # Finding Python and the pybind11 directory. This is done using the pybind11
+  # mechanisms.
+  # To build VISR for a non-default Python version, set the CMake cache variable PYTHON_EXECUTABLE to the respective interpreter binary.
+  set( PYBIND11_DIR ${PROJECT_SOURCE_DIR}/3rd/pybind11/ CACHE PATH "Location of the Pybind11 library. Defaults to the internally provided version in 3rd/pybind11." )
 
-  find_package( PythonLibs REQUIRED )
+  message( STATUS "Using PYBIND11_DIR: " ${PYBIND11_DIR} )
 
-  # find_package does not detect if the Python include directories are not found.
-  # Checking prevents strange error messages later on.
-  if( NOT DEFINED PYTHONLIBS_VERSION_STRING )
-    message( FATAL_ERROR "Invalid setting for PYTHON_INCLUDE_DIR." )
-  endif( NOT DEFINED PYTHONLIBS_VERSION_STRING )
+  # Ensure that pybind11's targets are exported within the VISR export set.
+  # This is necessary to export static versions of libpythonsupport
+  # and libpythoncomponents, which have a private link dependency to pybind11::embed.
+  # A drawback of the current approach is that the targets are exported as,
+  # e.g., VISR::embed, but we cannot set the namespace because this is done in
+  # the pybind11 tree.
+  set( PYBIND11_EXPORT_NAME VISR-3rd_party_static-exports )
+  # Force setting of pybind11 option (necessary in order to get the targets exported)
+  set( PYBIND11_INSTALL ON CACHE BOOL "Force exporting of pybind11 targets." FORCE )
 
-  # As we cannot use the PythonLibsNew package due to possible mismatches of the Python library name,
-  # we have to set the Python extensions ourselves (using the same variable names as created by
-  # PythonLibsNew.
-  # Note: The pybind11Tools mechanism apparently needs this as well.
-  if( WIN32 )
-    set( PYTHON_MODULE_EXTENSION ".pyd" )
-  elseif( APPLE )
-    set( PYTHON_MODULE_EXTENSION ".so" )
-  else( WIN32 )
-    set( PYTHON_MODULE_EXTENSION ${CMAKE_SHARED_LIBRARY_SUFFIX} )
-  endif( WIN32 )
+  # Enable the pybind11 cmake support via add_subdirectory
+  # This takes, amongst other things, care of providing proper
+  # compile and link options.
+  # The second argument specifies the binary directory and is needed if
+  # ${PYBIND11_DIR} could be outside the project source directory.
+  # EXCLUDE_FROM_ALL means that the target will not be built
+  # (which isn't relevant for a header-only library anyway), and that it
+  # is not shown in IDE project files.
+  # TODO: consider to use the binary dir only if an outside PYBIND11_DIR
+  # is used. This would avoid a 3rd/ folder in the build directory unless
+  # necessary.
+  add_subdirectory( ${PYBIND11_DIR}
+  ${CMAKE_BINARY_DIR}/3rd/pybind11 EXCLUDE_FROM_ALL )
 
-  # This variable is used by pybind11Tools
-  SET( PYBIND11_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/3rd/include/pybind11 )
+  # Define a Python version string. Note that the variables returned from
+  # the pybind11 may not contain the Python patch version.
+  # However, this is not problematic because only the major.minor
+  # version is needed to set the VISR package name.
+  set( VISR_PYTHON_VERSION_MAJOR_MINOR ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} )
 
-  # Enable the pybind11 cmake support
-  # This takes, amongst other things, care of providing proper compile/link options.
-  include( pybind11Tools )
+  # Define the pybind11 version as a version string.
+  # This string is imported as a target property of the
+  # VISR::pythonsupport libraries and can be used by dependent
+  # project to check whether they are using a compatible
+  # pybind11 version.
+  get_directory_property(PYBIND11_VERSION_MAJOR DIRECTORY ${PYBIND11_DIR}
+  DEFINITION PYBIND11_VERSION_MAJOR )
+  get_directory_property(PYBIND11_VERSION_MINOR DIRECTORY ${PYBIND11_DIR}
+  DEFINITION PYBIND11_VERSION_MINOR )
+  get_directory_property(PYBIND11_VERSION_PATCH DIRECTORY ${PYBIND11_DIR}
+  DEFINITION PYBIND11_VERSION_PATCH )
+  set( VISR_PYBIND11_VERSION
+    ${PYBIND11_VERSION_MAJOR}.${PYBIND11_VERSION_MINOR}.${PYBIND11_VERSION_PATCH} )
 
-ENDIF( BUILD_PYTHON_BINDINGS )
+  # get PYTHON_SITE_PACKAGES to figure out where to install; this looks at
+  # PYTHON_EXECUTABLE to figure out which python to use, which makes sure that
+  # it's always compatible with the python found by the pybind11 add_subdirectory
+  # above
+  list(APPEND CMAKE_MODULE_PATH "${PYBIND11_DIR}/tools")
+  find_package(PythonLibsNew REQUIRED)
+endif( BUILD_PYTHON_BINDINGS )
+
+option( BUILD_DISABLE_THREADS "Whether to disable the use of threads. This is mainly useful mainly specialised purposes, e.g., Web assembly" OFF )
+
+################################################################################
+# Set the install directories of special output types.
+# For Linux this adjusts the path to put the items under /usr/share/visr
+
+if( VISR_SYSTEM_NAME MATCHES "Linux" )
+  set( VISR_TOPLEVEL_INSTALL_DIRECTORY "share/visr" ) # Directory under CMAKE_INSTALL_PREFIX where visr-specific content is placed.
+else( VISR_SYSTEM_NAME MATCHES "Linux" )
+  set( VISR_TOPLEVEL_INSTALL_DIRECTORY "./" ) # CMAKE_INSTALL_PREFIX is already OK
+endif( VISR_SYSTEM_NAME MATCHES "Linux" )
+
+# Installation destination for third-party libraries: shared libs (incl. the DLL part and
+# import lib on Windows) and static libs.
+# This will be appended to the installation prefix.
+if( VISR_SYSTEM_NAME MATCHES Linux )
+  # Installed files go into the /usr tree, so we must use the standard location for the libs.
+  set( THIRDPARTY_LIBRARY_INSTALL_DIRECTORY lib )
+  set( THIRDPARTY_RUNTIME_INSTALL_DIRECTORY lib)
+  set( THIRDPARTY_ARCHIVE_INSTALL_DIRECTORY lib )
+else()
+  # TODO: Decide whether this should go into lib/ on Windows to avoid an
+  # additional entry to be added to %PATH%
+  set( THIRDPARTY_LIBRARY_INSTALL_DIRECTORY 3rd )
+  set( THIRDPARTY_RUNTIME_INSTALL_DIRECTORY 3rd )
+  set( THIRDPARTY_ARCHIVE_INSTALL_DIRECTORY 3rd )
+endif( VISR_SYSTEM_NAME MATCHES Linux )
 
 ###########################################################
 # Support for 3rd-party libraries.
 
-# Threads are required wherever we link with boost_threads.
-# Note that the dependency is added automatically in most cases, so the
-# omission will go unnoticed very often.
-FIND_PACKAGE(Threads REQUIRED)
+# Add 3rd-party libraries that are built locally.
+add_subdirectory( 3rd )
 
+# Threads might be used through boost::filesystem, the C++11 threads functionality,
+# or through direct OS calls.
+if( BUILD_DISABLE_THREADS )
+  add_definitions( -DVISR_DISABLE_THREADS=1 )
+else()
+  find_package(Threads REQUIRED)
+endif( BUILD_DISABLE_THREADS )
+
+# if( NOT WIN32 )
 ## Portaudio
-
-# For windows, we ship the includes and libraries.
-# TODO: Support system-specific library directories
-# TODO: Provide separate libraries for debug and release builds.
-IF( WIN32 ) # This includes 64-bit platforms!
-  # NOTE: It would be nicer to pass the search path to the FIND_PACKAGE
-  # call instead of setting it globally.
-  LIST( APPEND CMAKE_INCLUDE_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/include/portaudio) )
-  LIST( APPEND CMAKE_LIBRARY_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/lib/${VISR_PLATFORM_NAME}/portaudio) )
-
-ENDIF( WIN32 )
-FIND_PACKAGE( Portaudio REQUIRED )
+option( BUILD_AUDIOINTERFACES_PORTAUDIO "Support PortAudio audio interface" ON )
+if( BUILD_AUDIOINTERFACES_PORTAUDIO )
+  # For windows, we ship the includes and libraries.
+  # TODO: Support system-specific library directories
+  # TODO: Provide separate libraries for debug and release builds.
+  if( WIN32 ) # This includes 64-bit platforms!
+    # NOTE: It would be nicer to pass the search path to the FIND_PACKAGE
+    # call instead of setting it globally.
+    list( APPEND CMAKE_INCLUDE_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/include/portaudio) )
+    list( APPEND CMAKE_LIBRARY_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/lib/${VISR_PLATFORM_NAME}/portaudio) )
+  endif( WIN32 )
+  find_package( Portaudio REQUIRED )
+endif( BUILD_AUDIOINTERFACES_PORTAUDIO )
+# endif( NOT WIN32 )
 
 ## Jack Audio Connection Kit (JACK)
-OPTION( BUILD_USE_JACK "Support the Jack (Jack Audio Connection Kit) audio interface" OFF )
-IF( BUILD_USE_JACK )
+option( BUILD_AUDIOINTERFACES_JACK "Support the Jack (Jack Audio Connection Kit) audio interface" OFF )
+if( BUILD_AUDIOINTERFACES_JACK )
   # Preliminary support for testing the Jack library on Windows platforms.
-  IF( WIN32 )
-    SET( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{JACK_ROOT} )
-  ENDIF( WIN32 )
-  FIND_PACKAGE( Jack REQUIRED)
-ENDIF( BUILD_USE_JACK )
+  if( WIN32 )
+    set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{JACK_ROOT} )
+  endif( WIN32 )
+  find_package( Jack REQUIRED)
+endif( BUILD_AUDIOINTERFACES_JACK )
 
 ## Libsndfile
-# On Linux and MacOS, we use the versions provided by the OS (or brew on MacOS)
-IF( WIN32 ) # This includes 64-bit platforms!
-  # NOTE: It would be nicer to pass the search path to the FIND_PACKAGE
-  # call instead of setting it globally.
-  LIST( APPEND CMAKE_INCLUDE_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/include/sndfile) )
-  LIST( APPEND CMAKE_LIBRARY_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/lib/${VISR_PLATFORM_NAME}/sndfile) )
-ENDIF( WIN32 )
-FIND_PACKAGE( SndFile REQUIRED )
-
-## KissFFT: Basic FFT support (portable, slow and with a permissive licence)
-# This libbrary is provided by 3rd/ for all platforms, because it is no standard library (moreover, heavily tweaked to geet both float and double support)
-  LIST( APPEND CMAKE_INCLUDE_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/include/kissfft) )
-  LIST( APPEND CMAKE_LIBRARY_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/lib/${VISR_PLATFORM_NAME}/kissfft) )
-FIND_PACKAGE( KissFFT REQUIRED )
+option( BUILD_USE_SNDFILE_LIBRARY "Use libsndfile functionality (loading/storing of audio files)" ON )
+if( BUILD_USE_SNDFILE_LIBRARY )
+  # On Linux and MacOS, we use the versions provided by the OS (or brew on MacOS)
+  if( WIN32 ) # This includes 64-bit platforms!
+    # NOTE: It would be nicer to pass the search path to the FIND_PACKAGE
+    # call instead of setting it globally.
+    list( APPEND CMAKE_INCLUDE_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/include/sndfile) )
+    list( APPEND CMAKE_LIBRARY_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/lib/${VISR_PLATFORM_NAME}/sndfile) )
+  endif( WIN32 )
+  find_package( SndFile REQUIRED )
+endif( BUILD_USE_SNDFILE_LIBRARY )
 
 # IPP
 OPTION( BUILD_USE_IPP "Use the Intel IPP for fast arithmetic functions and trasnforms. Set the environment variable IPP_ROOT accordingly." OFF )
@@ -300,13 +446,6 @@ IF( BUILD_USE_IPP )
   # Use the variable IPP_ROOT to point to the base directory of the library.
   FIND_PACKAGE( IPP REQUIRED )
 ENDIF( BUILD_USE_IPP )
-
-## FFTS (Fastest Fourier Transform in the south)
-# Because this is a non-standard library, we provide it for all platforms.
-# TODO: Consider making this library optional
-LIST( APPEND CMAKE_INCLUDE_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/include/ffts) )
-LIST( APPEND CMAKE_LIBRARY_PATH TO_CMAKE_PATH(${PROJECT_SOURCE_DIR}/3rd/lib/${VISR_PLATFORM_NAME}/ffts) )
-FIND_PACKAGE( FFTS REQUIRED )
 
 ## Boost support
 # On Linux and Windows, the boost libraries provided by the OS image (or brew on MacOS)
@@ -319,35 +458,63 @@ FIND_PACKAGE( FFTS REQUIRED )
 # Todo: Replace by a substantiated version requirement.
 set( VISR_BOOST_MINIMUM_VERSION 1.50 )
 
-OPTION( Boost_USE_STATIC_LIBS OFF "Whether to use static or shared boost libraries. Note: Static libraries will often not work for targets that are shared libraries themselves (Python packages, DAW plugins, Matlab or MaxMSP externals) because the library code is not position-independent" )
+option( Boost_USE_STATIC_LIBS "Whether to use static or shared boost libraries." OFF)
 
 # Define the boost libraries that will be needed in deployed installations.
 # In boost 1.59 on Windows, chrono is an implicit dependency of boost_thread. So in order to locate the runtime DLL for packaging, we mus add this library here.
 # Note that unit_test_framework is excluded here because it's only used in local builds.
-SET( VISR_BOOST_LIBRARIES chrono date_time filesystem program_options system thread regex timer atomic )
+set( VISR_BOOST_INSTALL_LIBRARIES chrono date_time filesystem program_options system regex timer )
+if( NOT BUILD_DISABLE_THREADS )
+  list( APPEND VISR_BOOST_INSTALL_LIBRARIES thread atomic)
+endif( NOT BUILD_DISABLE_THREADS )
+# The set of all boost libraries used by the build and test stages.
+set( VISR_BOOST_LIBRARIES ${VISR_BOOST_INSTALL_LIBRARIES} unit_test_framework )
 # Note that boost regex is used only with GCC <= 4.8 on Linux because of the faulty std::regex implementation in these GCC versions.
 # However, we do not exclude boost::regex here because of the number of places it is handled in the build structure (especially packaging)
 
-FIND_PACKAGE( Boost ${VISR_BOOST_MINIMUM_VERSION} REQUIRED COMPONENTS ${VISR_BOOST_LIBRARIES} unit_test_framework )
- 
+# Switch to the "-mt" set of libraries. Also prevents warnings due to already
+# defined import locations.
+set(Boost_USE_MULTITHREADED TRUE)
+
+# Store/restore value of Boost_USE_STATIC_LIBS - vcpkg on Windows will reset it during find_package
+set(_Boost_USE_STATIC_LIBS ${Boost_USE_STATIC_LIBS})
+find_package( Boost ${VISR_BOOST_MINIMUM_VERSION} REQUIRED COMPONENTS ${VISR_BOOST_LIBRARIES} )
+set(Boost_USE_STATIC_LIBS ${_Boost_USE_STATIC_LIBS})
+
+# Avoid a pragma message caused by an internal inconsistency between boost::bind and
+# boost::property_tree.
+message( STATUS "Boost_VERSION_STRING " ${Boost_VERSION_STRING} )
+if( (${Boost_VERSION_STRING} VERSION_GREATER 1.72.0)
+ AND (${Boost_VERSION_STRING} VERSION_LESS 1.76.0) )
+  add_definitions( -DBOOST_BIND_GLOBAL_PLACEHOLDERS=1 )
+endif( (${Boost_VERSION_STRING} VERSION_GREATER 1.72.0)
+ AND (${Boost_VERSION_STRING} VERSION_LESS 1.76.0) )
+
+
+# Static Boost libraries might not be usable in shared libraries or loadable
+# modules, depending on how they are compiled
+if( Boost_USE_STATIC_LIBS AND NOT WIN32 )
+  if( "shared" IN_LIST VISR_BUILD_LIBRARY_TYPES )
+    message( WARNING
+        "Building shared libraries if Boost_USE_STATIC_LIBS is on. "
+        "This might break if Boost was compiled without position-independent code."
+        )
+  endif( "shared" IN_LIST VISR_BUILD_LIBRARY_TYPES )
+endif( Boost_USE_STATIC_LIBS AND NOT WIN32 )
+
 ############################################################
 # Copy 3rd party libraries and set RPATH for MacOs
-if( VISR_SYSTEM_NAME MATCHES "MacOS" )
+if( BUILD_USE_SNDFILE_LIBRARY AND (VISR_SYSTEM_NAME MATCHES "MacOS") )
   find_package(Flac REQUIRED)
   find_package(OggVorbis REQUIRED)
-endif( VISR_SYSTEM_NAME MATCHES "MacOS" )
+endif( BUILD_USE_SNDFILE_LIBRARY AND (VISR_SYSTEM_NAME MATCHES "MacOS") )
 
-################################################################################
-# Set the install directories of special output types.
-# For Linux this adjusts the path to put the items under /usr/share/visr
-
-if( VISR_SYSTEM_NAME MATCHES "Linux" )
-  set( VISR_TOPLEVEL_INSTALL_DIRECTORY "share/visr" ) # Directory under CMAKE_INSTALL_PREFIX where visr-specific content is placed.
-else( VISR_SYSTEM_NAME MATCHES "Linux" )
-  set( VISR_TOPLEVEL_INSTALL_DIRECTORY "./" ) # CMAKE_INSTALL_PREFIX is already OK
-endif( VISR_SYSTEM_NAME MATCHES "Linux" )
-
-set( PYTHON_MODULE_INSTALL_DIRECTORY "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" )
+if( BUILD_PYTHON_BINDINGS )
+  set( PYTHON_MODULE_INSTALL_DIRECTORY "${PYTHON_SITE_PACKAGES}" )
+else( BUILD_PYTHON_BINDINGS )
+  # this sometimes gets used if BUILD_PYTHON_BINDINGS is not set
+  set( PYTHON_MODULE_INSTALL_DIRECTORY "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" )
+endif( BUILD_PYTHON_BINDINGS )
 set( DOCUMENTATION_INSTALL_DIRECTORY "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/doc" )
 
 ################################################################################
@@ -360,7 +527,7 @@ set( DOCUMENTATION_INSTALL_DIRECTORY "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/doc" )
 #   libraries itself, which implies that they need to be copied.
 
 # Define the location of the 3rd-party runtime libraries (Shared libraries or DLLs)
-set( VISR_BUILD_3RD_PARTY_RUNTIME_LIBRARY_DIR ${CMAKE_BINARY_DIR}/3rd )
+set( VISR_BUILD_3RD_PARTY_RUNTIME_LIBRARY_DIR ${CMAKE_BINARY_DIR}/3rd/ )
 
 # NOTE: This must happen before the add_subdirectory( src ) directive.
 if( (VISR_SYSTEM_NAME MATCHES "MacOS") OR (VISR_SYSTEM_NAME MATCHES "Windows") )

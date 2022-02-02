@@ -1,4 +1,4 @@
-/* Copyright Institute of Sound and Vibration Research - All rights reserved */
+ /* Copyright Institute of Sound and Vibration Research - All rights reserved */
 
 #include "panning_calculator.hpp"
 
@@ -68,6 +68,8 @@ PanningCalculator::PanningCalculator( SignalFlowContext const & context,
  , mDiffuseNormalisation( (diffuseNormalisation == Normalisation::Default) ? Normalisation::Energy : diffuseNormalisation )
  , mLabelLookup( fillLabelLookup( arrayConfig ) )
 {
+    //mVbapCalculator->setNearTripletBoundaryCosTheta(-0.7);
+
     // Initialise for all (regular and virtual) loudspeakers.
     for( std::size_t lspIdx( 0 ); lspIdx < mNumberOfAllLoudspeakers; ++lspIdx )
     {
@@ -137,9 +139,12 @@ void PanningCalculator::setListenerPosition( pml::ListenerPosition const & pos )
   setListenerPosition( pos.x(), pos.y(), pos.z() );
 }
 
+
+
+
 namespace // unnamed
 {
-  void normalise( SampleType const * in, SampleType * out, std::size_t numberOfElements, 
+  void normalise( SampleType const * in, SampleType * out, std::size_t numberOfElements,
                   PanningCalculator::Normalisation mode, std::size_t outputStride = 1,
                   SampleType targetLevel = 1.0f )
   {
@@ -164,6 +169,9 @@ namespace // unnamed
     }
   }
 }
+
+
+
 
 void PanningCalculator::process()
 {
@@ -247,7 +255,7 @@ void PanningCalculator::process()
         continue;
       }
       // From here on we only deal with single-channel objects. That means we can skip all other objects
-      if( obj.numberOfChannels() != 1 ) 
+      if( obj.numberOfChannels() != 1 )
       {
         continue;
       }
@@ -266,7 +274,7 @@ void PanningCalculator::process()
       {
         SampleType x,y,z;
         std::tie( x, y, z ) = efl::spherical2cartesian( pw->incidenceAzimuth(), pw->incidenceElevation(), pw->referenceDistance() );
-        mVbapCalculator->calculateGainsUnNormalised( x, y, z, &mTmpGains[0] );
+        mVbapCalculator->calculateGainsUnNormalised( x, y, z, &mTmpGains[0], true /*planeWave*/ );
         diffuseRatio = 0.0f;
         objectHandled = true;
       }
@@ -274,7 +282,7 @@ void PanningCalculator::process()
       if( ps )
       {
         objectHandled = true;
-        mVbapCalculator->calculateGainsUnNormalised( ps->x(), ps->y(), ps->z(), mTmpGains.data() );
+        mVbapCalculator->calculateGainsUnNormalised( ps->x(), ps->y(), ps->z(), mTmpGains.data(), false /*planeWave*/ );
 
         objectmodel::PointSourceWithDiffuseness const * psd = dynamic_cast<objectmodel::PointSourceWithDiffuseness const *>(&obj);
         diffuseRatio = psd ? psd->diffuseness() : 0.0f;
@@ -296,8 +304,7 @@ void PanningCalculator::process()
         }
         if( hfGains )
         {
-          std::transform( mTmpGains.data(), mTmpGains.data()+mNumberOfRegularLoudspeakers,
-            mTmpHfGains.data(), [](SampleType val ){ return std::sqrt(val); } );
+          std::transform( mTmpGains.data(), mTmpGains.data()+mNumberOfRegularLoudspeakers, mTmpHfGains.data(), [](SampleType val ){ return std::sqrt(val); } );
           normalise( mTmpHfGains.data(), hfGains->data() + objChannelIdx, mNumberOfRegularLoudspeakers,
             mHfNormalisation, hfGains->stride(), directRatio );
         }
@@ -439,10 +446,15 @@ void PanningCalculator::process()
           lfGains( lspIdx, channelId ) = scaleFactor * mTmpGains[lspIdx];
         }
 
-        // Now compute the VBIP (HF) gains
-        std::for_each( mTmpGains.data(), mTmpGains.data()+mNumberOfRegularLoudspeakers,
+        // Now compute the VBIP (HF) gains  (generalise with pow)
+//        std::for_each( mTmpGains.data(), mTmpGains.data()+mNumberOfRegularLoudspeakers,
                        // Safeguard against potentially negative values that would yield NaNs
-                       [](SampleType & val ){ val = std::sqrt( std::max( val, static_cast<SampleType>(0.0) ) ); });
+                       [](SampleType & val ){ val = std::pow( std::max( val, static_cast<SampleType>(0.0) ), 0.0 ); });
+
+        std::for_each( mTmpGains.data(), mTmpGains.data()+mNumberOfRegularLoudspeakers,
+                        // Safeguard against potentially negative values that would yield NaNs
+                        [](SampleType & val ){ val = std::sqrt( std::max( val, static_cast<SampleType>(0.0) ) ); });
+
         // Re-normalise with l2 (power) norm.
         SampleType const l2Sqr = std::accumulate( mTmpGains.data(), mTmpGains.data()+mNumberOfRegularLoudspeakers,
                                                   static_cast<SampleType>(0.0),
@@ -501,6 +513,7 @@ PanningCalculator::fillLabelLookup( panning::LoudspeakerArray const & config )
   }
   return table;
 }
+
 
 } // namespace rcl
 } // namespace visr

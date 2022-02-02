@@ -1,7 +1,9 @@
 /* Copyright Institute of Sound and Vibration Research - All rights reserved */
 
+#include <libefl/initialise_library.hpp>
+
 #include <libefl/vector_functions.hpp>
-#include <libefl/vector_functions_reference.hpp>
+#include <libefl/reference/vector_functions.hpp>
 
 #include <libefl/aligned_array.hpp>
 
@@ -15,13 +17,15 @@
 
 namespace visr
 {
-namespace rbbl
+namespace efl
 {
 namespace test
 {
             
 BOOST_AUTO_TEST_CASE( complexMultiply1 )
 {
+  efl::initialiseLibrary();
+  
   const std::size_t alignment = 0;
 
   std::size_t vecSize = 27;
@@ -84,10 +88,12 @@ BOOST_AUTO_TEST_CASE( complexMultiplyConstant )
 
   for( std::size_t vecIdx( 0 ); vecIdx < vecSize; ++vecIdx )
   {
-    BOOST_CHECK_CLOSE( std::abs(result[vecIdx] - reference[vecIdx]), 0.0f, 1.0e-6 );
+    // BOOST_CHECK_SMALL uses the absolute difference instead of the relative
+    // error used by BOOST_CHECK_CLOSE
+    BOOST_CHECK_SMALL( std::abs(result[vecIdx] -  reference[vecIdx]), 1.0e-5f );
   }
 }
 
 } // namespace test
-} // namespace rbbl
+} // namespace efl
 } // namespace visr

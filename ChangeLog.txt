@@ -2,6 +2,67 @@
 Changelog for project VISR
 ==========================
 
+
+Release 0.13.0
+==============
+
+* BREAKING CHANGE: Target export files (visr-config.cmake, visr-config-version.cmake)
+  are now located in the root directory of the build tree (instead of in
+  $VISR-build/src/). That means dependent projects need to update their VISR_DIR
+  setting when using a build tree.
+* FEATURE: Refactored time-frequency framework (partly in librcl, partly in libpml).
+* FEATURE: Added time API to represent time (at block or sample resolution)
+  within VISR components.
+* FEATURE: Reworked efl library. Added architecture-dependent optimised implementations
+  for some functions on Intel and ARM platforms.
+* FEATURE: Panning library: Updated CAP (compensated amplitude panning) algorithm.
+* FEATURE: Panningdsp library (new): Specialised amplitude panning components (and
+  corresponding parameter types) for sample-exact panning trajectories, incl.
+  arbitrary transition times.
+* FEATURE: pml::ListenerPosition orientations use internal quaternion representation,
+  added Quaternion class and operations (librbbl).
+* FEATURE: librcl: Reimplementation of BiquadIirFilter for improved performance
+  (using filter function in libefl, which can be optimised per architecture).
+* FEATURE: Convolver components (librcl): Added optional parameter inputs to change
+  all routings at runtime with a single parameter message.
+* FEATURE: librcl: Added Parameter{Input|Output}Terminator components to satisfy
+  unused parameter ports.
+* FEATURE: librrl: Added system profiling feature (enabled by CMake option
+  BUILD_RUNTIME_SYSTEM_PROFILING)
+* FEATURE: Reworked parameter type registration, introduced template class
+  visr::ParameterRegistrar.
+* UPDATE: libpythonsupport: Changed module loading from deprecated 'imp' to
+  'importlib' package, upgraded code to support versions <= Python 3.9.
+* BUGFIX: libreverbobject: Object level was applied twice on the reverb level,
+  leading to disproportionate attenutation of reverb if the object gain was reduced.
+* BUGFIX: libreverbobject: Avoid creation of text file "leta_decorrelation_filters.dat"
+  unless debug output is enabled in the source file.
+* CLEANUP: Removed unused applications scene_decoder, network_audio_streamer, and gain_matrix.
+* CLEANUP: All remaining applications are installed (in component standalone_applications) if
+  BUILD_STANDALONE_APPLICATIONS is activated.
+* CLEANUP: Renamed test application binary names: feedthrough_app->feedthrough,
+  matrix_convolver_app->matrix_convolver
+  This is to ease porting of VISR to new platforms and to avoid binary compatibility
+  issues with different compilers/standard libraries.
+* BUILD: Support component-based exporting. This allows the use in external projects
+  with a smaller number of dependencies (especially if only shared VISR libraries
+  are used by external projects.) This is optional, not using COMPONENTS in
+  find_package(VISR) retains the previous behaviour.
+* BUILD: Revised target exporting configuration to add find_dependency directives
+  for 3rdparty libraries (Boost and Threads) if the components static_libraries
+  static_pic_libraries are built.
+* BUILD: Include pybind11 (including finding of Python) via add_subdirectory().
+  This is the way preferred by pybind11 according to its documentation.
+* BUILD: Added options BUILD_INSTALL_STATIC_PIC_LIBRARIES for building atatic
+  libraries with position-independent code (PIC).
+  This is a specialist option for creating self-contained shared libraries or shared modules
+  (e.g., DAW plugins or Max/MSP plugins) on Unix platforms.
+* BUILD: Added options BUILD_DISABLE_THREADS (default OFF), BUILD_USE_SNDFILE_LIBRARY,
+  (default ON) and BUILD_AUDIOINTERFACES_PORTAUDIO  (default ON) to reduce 3rd-party
+  dependencies when needed.. This is mainly for specialist builds.
+* 3RDPARTY: Updated pybind11 to version 2.9.0.
+* 3RDPARTY: Added FFT libraries kissfft and ffts as git subtrees and build them internally.
+
 Patch release 0.12.2
 --------------------
 
@@ -29,7 +90,7 @@ Patch release 0.12.1
 * FIX: Removed public dependency of librcl on Boost. Boost is still used internally, but only private.
 * Cleanup of CMakeList.txt files, remove obsolete dependency on thread library.
 
-Patch release 0.12.0
+Release 0.12.0
 ====================
 
 * First public release.
@@ -108,7 +169,7 @@ Version 0.11.0
 * Fixing of Python rpaths in Mac OS X during installation.
 * Cleaned up CMake target dependencies to reduce shared library dependencies (especially for Python)
 * Link standalone applications to shared libraries.
-* Changed defines VISR_<LIB>_STATIC_LIBRARY for libraries: define is now necessary when using the static 
+* Changed defines VISR_<LIB>_STATIC_LIBRARY for libraries: define is now necessary when using the static
   variant instead of the shared (automatically done by CMake exported targets).
 * Added metadapter code to repo (as git subtree)
 

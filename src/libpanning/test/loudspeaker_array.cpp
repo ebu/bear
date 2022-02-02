@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE( LoadArrayConfigXmlString ){
   std::vector<SampleType> vbapGains;
   std::fill( vbapGains.begin(), vbapGains.end(), 0.0f );
   vbapGains.resize( array.getNumRegularSpeakers() );
-  vbap.calculateGains( 2.08f, 1.0f, -5.0f, vbapGains.data() );
-  //vbap.calculateGains( 1.0f, 1.0f, 0.0f, vbapGains.data() );
+  vbap.calculateGains( 2.08f, 1.0f, -5.0f, vbapGains.data(), false /*planeWave*/ );
+  //vbap.calculateGains( 1.0f, 1.0f, 0.0f, vbapGains.data() , false /*planeWave*/ );
   std::size_t const numCols = array.getNumRegularSpeakers();
 
   std::cout << "VBAP gain for source : ";

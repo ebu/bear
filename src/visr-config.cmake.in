@@ -1,0 +1,111 @@
+@PACKAGE_INIT@
+
+if( POLICY CMP0057 )
+  CMAKE_POLICY(SET CMP0057 NEW)
+else( POLICY CMP0057 )
+  message( FATAL_ERROR "Policy CMP0057 not supported (IN_LIST operator), although CMake version requirement is met.")
+endif( POLICY CMP0057 )
+
+set( VISR_EXPORTED_COMPONENTS @VISR_EXPORTED_COMPONENTS@ )
+
+# Require all components if no components are specified in find_package( VISR )
+if(NOT VISR_FIND_COMPONENTS)
+  set(VISR_FIND_COMPONENTS ${VISR_EXPORTED_COMPONENTS})
+endif(NOT VISR_FIND_COMPONENTS)
+
+# TODO: take care of binaries and Python externals!
+
+if( (shared_libraries IN_LIST VISR_FIND_COMPONENTS)
+     AND (NOT 3rd_party_shared IN_LIST VISR_FIND_COMPONENTS) )
+  list( PREPEND VISR_FIND_COMPONENTS 3rd_party_shared ) # 3rd_party_static
+endif( (shared_libraries IN_LIST VISR_FIND_COMPONENTS)
+     AND (NOT 3rd_party_shared IN_LIST VISR_FIND_COMPONENTS) )
+
+if( ((static_libraries IN_LIST VISR_FIND_COMPONENTS) OR
+    (static_libraries_pic IN_LIST VISR_FIND_COMPONENTS) )
+     AND (NOT 3rd_party_static IN_LIST VISR_FIND_COMPONENTS) )
+  list( PREPEND VISR_FIND_COMPONENTS 3rd_party_static )
+endif( ((static_libraries IN_LIST VISR_FIND_COMPONENTS) OR
+  (static_libraries_pic IN_LIST VISR_FIND_COMPONENTS) )
+   AND (NOT 3rd_party_static IN_LIST VISR_FIND_COMPONENTS) )
+
+# Ensure that the list of required components is unique and ordered such that
+# dependencies always appear before components the require them.
+set( VISR_FIND_COMPONENTS_ADJUSTED )
+foreach( _comp ${VISR_EXPORTED_COMPONENTS} )
+  if( ${_comp} IN_LIST VISR_FIND_COMPONENTS )
+    list( APPEND VISR_FIND_COMPONENTS_ADJUSTED ${_comp} )
+  endif( ${_comp} IN_LIST VISR_FIND_COMPONENTS )
+endforeach( _comp ${VISR_EXPORTED_COMPONENTS} )
+
+message( STATUS "Adjusted VISR components: ${VISR_FIND_COMPONENTS_ADJUSTED}" )
+
+foreach(_comp ${VISR_FIND_COMPONENTS_ADJUSTED})
+  if( NOT _comp IN_LIST VISR_EXPORTED_COMPONENTS )
+    set(VISR_FOUND False)
+    set(VISR_NOT_FOUND_MESSAGE "Unsupported component: ${_comp}")
+  endif()
+  include("${CMAKE_CURRENT_LIST_DIR}/visr_${_comp}_targets.cmake")
+endforeach()
+
+set( VISR_LIBRARIES @VISR_LIBRARIES@ )
+
+set( VISR_USE_STATIC_BOOST_LIBRARIES @Boost_USE_STATIC_LIBS@ )
+set( VISR_USE_SNDFILE_LIBRARY @BUILD_USE_SNDFILE_LIBRARY@ )
+set( VISR_THREAD_SUPPORT_DISABLED @BUILD_DISABLE_THREADS@ )
+set( VISR_AUDIOINTERFACES_PORTAUDIO @BUILD_AUDIOINTERFACES_PORTAUDIO@ )
+set( VISR_AUDIOINTERFACES_JACK @BUILD_AUDIOINTERFACES_JACK@ )
+set( Boost_USE_MULTITHREADED @Boost_USE_MULTITHREADED@ )
+set( Boost_USE_STATIC_LIBS @Boost_USE_STATIC_LIBS@ )
+
+include(CMakeFindDependencyMacro)
+
+# Boost is always required because some VISR libraries use it as a PUBLIC dependency.
+find_dependency(Boost @Boost_VERSION_STRING@ EXACT
+  COMPONENTS @VISR_BOOST_LIBRARIES@ )
+
+if( (static_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+  OR ( static_pic_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED ) )
+  # Export dependencies for exported static targets (incl. static_pic)
+  # if any of these variants is built.
+  if( NOT ${VISR_THREAD_SUPPORT_DISABLED} )
+    find_dependency( Threads )
+  endif( NOT ${VISR_THREAD_SUPPORT_DISABLED} )
+
+  # Put the FindSndFile.cmake and FindPortaudio.cmake files,
+  # which have been copied into this directory, onto the CMake
+  # module search path.
+  list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} )
+
+  # Append the locations of the 3rd-party library files provided with VISR
+  # so that importing projects can use them.
+  list( APPEND CMAKE_INCLUDE_PATH @PACKAGE_VISR_3RD_PARTY_DIR@/include )
+  list( APPEND CMAKE_LIBRARY_PATH @PACKAGE_VISR_3RD_PARTY_DIR@ )
+
+  if( ${VISR_USE_SNDFILE_LIBRARY} )
+    find_dependency( SndFile )
+  endif( ${VISR_USE_SNDFILE_LIBRARY} )
+  if( VISR_AUDIOINTERFACES_PORTAUDIO )
+    find_dependency( Portaudio )
+  endif( VISR_AUDIOINTERFACES_PORTAUDIO )
+
+  # Note: we do not list the dependencies SndFile, Portaudio, Jack
+  # here, because they are non-standard and cannot imported through
+  # an export config. I.e., it would require a FindXXX.cmake file in
+  # every dependent project.  include(CMakeFindDependencyMacro)
+endif( ( static_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+  OR ( static_pic_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED ) )
+
+# Check whether the requirements of the exported targets are met.
+include(CMakePackageConfigHelpers)
+foreach( lib ${VISR_LIBRARIES} )
+  if( shared_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+    check_required_components( ${lib}_shared )
+  endif( shared_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+  if( static_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+    check_required_components( ${lib}_static )
+  endif(  static_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+  if( static_pic_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+    check_required_components( ${lib}_static_pic )
+  endif( static_pic_libraries IN_LIST VISR_FIND_COMPONENTS_ADJUSTED )
+endforeach( lib ${VISR_LIBRARIES} )

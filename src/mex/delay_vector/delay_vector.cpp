@@ -74,13 +74,12 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs, const mxArray *prhs[] )
     const rcl::DelayVector::InterpolationType intType = rcl::DelayVector::InterpolationType::Linear;
 
     signalflows::DelayVector flow( cNumberOfChannels, cInterpolationLength, intType, periodSize, samplingFrequency );
-    flow.setup();
 
     efl::BasicVector<ril::SampleType> initialDelays( cNumberOfChannels, ril::cVectorAlignmentSamples );
-    initialDelays.fillValue( static_cast<ril::SampleType>(0.0002) );
+    initialDelays.fillValue( static_cast<visr::SampleType>(0.0002) );
 
     efl::BasicVector<ril::SampleType> initialGains( cNumberOfChannels, ril::cVectorAlignmentSamples );
-    initialGains.fillValue( static_cast<ril::SampleType>(0.735) );
+    initialGains.fillValue( static_cast<visr::SampleType>(0.735) );
 
     flow.setDelay( initialDelays );
     flow.setGain( initialGains );

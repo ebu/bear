@@ -28,9 +28,16 @@ void exportParameterConnection( pybind11::module& m )
      return new impl::ParameterConnection( &(sendPort.implementation()), &(receivePort.implementation()) );
    }), pybind11::arg("sendPort"), pybind11::arg("receivePort"), "Full constructor (usually not needed)." )
    .def( "__lt__", &impl::ParameterConnection::operator<, pybind11::arg("rhs"), "Comparison operator (for ordering connections." )
-   .def_property_readonly( "sender", []( impl::ParameterConnection const & self ){ return &(self.sender()->containingPort()); }, pybind11::return_value_policy::reference )
-   .def_property_readonly( "receiver", []( impl::ParameterConnection const & self ) { return &(self.receiver()->containingPort()); }, pybind11::return_value_policy::reference )
-
+   .def_property_readonly( "sender",
+                           []( impl::ParameterConnection const & self ) -> ParameterPortBase &
+                           {
+                             return self.sender()->containingPort();
+                           }, pybind11::return_value_policy::reference )
+   .def_property_readonly( "receiver",
+                           []( impl::ParameterConnection const & self ) -> ParameterPortBase &
+                           {
+                             return self.receiver()->containingPort();
+                           }, pybind11::return_value_policy::reference )
    .def( "__str__", []( impl::ParameterConnection const & conn )
    {
      std::stringstream repr;

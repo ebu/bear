@@ -12,9 +12,32 @@
 namespace visr
 {
 
+struct CreatorCounter
+{
+  static std::size_t & instance()
+  {
+    static std::size_t sInstance = 0;
+    return sInstance;
+  }
+
+  static std::size_t inc()
+  {
+    ++CreatorCounter::instance();
+    return CreatorCounter::instance();
+  }
+};
+
 ParameterFactory::Creator::Creator( CreateFunction fcn )
  : mCreateFunction( fcn )
 {
+  CreatorCounter::inc();
+}
+
+ParameterFactory::Creator::Creator( Creator && rhs ) = default;
+
+ParameterFactory::Creator::~Creator()
+{
+
 }
 
 std::unique_ptr<ParameterBase >

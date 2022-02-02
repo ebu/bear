@@ -1,11 +1,11 @@
 # - Try to find Portaudio
 # Once done this will define
 #
-#  PORTAUDIO_FOUND - system has Portaudio
-#  PORTAUDIO_INCLUDE_DIRS - the Portaudio include directory
-#  PORTAUDIO_LIBRARIES - Link these to use Portaudio
-#  PORTAUDIO_DEFINITIONS - Compiler switches required for using Portaudio
-#  PORTAUDIO_VERSION - Portaudio version
+#  Portaudio_FOUND - system has Portaudio
+#  Portaudio_INCLUDE_DIRS - the Portaudio include directory
+#  Portaudio_LIBRARIES - Link these to use Portaudio
+#  Portaudio_DEFINITIONS - Compiler switches required for using Portaudio
+#  Portaudio_VERSION - Portaudio version
 #
 #  Copyright (c) 2006 Andreas Schneider <mail@cynapses.org>
 #
@@ -14,32 +14,32 @@
 #
 
 
-if (PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
+if (Portaudio_LIBRARIES AND Portaudio_INCLUDE_DIRS)
   # in cache already
-  set(PORTAUDIO_FOUND TRUE)
-else (PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
+  set(Portaudio_FOUND TRUE)
+else (Portaudio_LIBRARIES AND Portaudio_INCLUDE_DIRS)
   if (NOT WIN32)
-   include(FindPkgConfig)
-   pkg_check_modules(PORTAUDIO2 portaudio-2.0)
+   find_package(PkgConfig REQUIRED)
+   pkg_check_modules(Portaudio2 portaudio-2.0)
   endif (NOT WIN32)
 
-  if (PORTAUDIO2_FOUND)
-    set(PORTAUDIO_INCLUDE_DIRS
-      ${PORTAUDIO2_INCLUDE_DIRS}
+  if (Portaudio2_FOUND)
+    set(Portaudio_INCLUDE_DIRS
+      ${Portaudio2_INCLUDEDIR}
     )
     if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-      set(PORTAUDIO_LIBRARIES "${PORTAUDIO2_LIBRARY_DIRS}/lib${PORTAUDIO2_LIBRARIES}.dylib")
+      set(Portaudio_LIBRARIES "${Portaudio2_LIBRARY_DIRS}/lib${Portaudio2_LIBRARIES}.dylib")
     else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-      set(PORTAUDIO_LIBRARIES
-        ${PORTAUDIO2_LIBRARIES}
+      set(Portaudio_LIBRARIES
+        ${Portaudio2_LINK_LIBRARIES}
       )
     endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(PORTAUDIO_VERSION
+    set(Portaudio_VERSION
       19
     )
-    set(PORTAUDIO_FOUND TRUE)
-  else (PORTAUDIO2_FOUND)
-    find_path(PORTAUDIO_INCLUDE_DIR
+    set(Portaudio_FOUND TRUE)
+  else (Portaudio2_FOUND)
+    find_path(Portaudio_INCLUDE_DIR
       NAMES
         portaudio.h
       PATHS
@@ -49,7 +49,7 @@ else (PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
         /sw/include
     )
    
-    find_library(PORTAUDIO_LIBRARY
+    find_library(Portaudio_LIBRARY
       NAMES
         portaudio
       PATHS
@@ -59,7 +59,7 @@ else (PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
         /sw/lib
     )
    
-    find_path(PORTAUDIO_LIBRARY_DIR
+    find_path(Portaudio_LIBRARY_DIR
       NAMES
         portaudio
       PATHS
@@ -69,39 +69,59 @@ else (PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
         /sw/lib
     )
    
-    set(PORTAUDIO_INCLUDE_DIRS
-      ${PORTAUDIO_INCLUDE_DIR}
+    set(Portaudio_INCLUDE_DIRS
+      ${Portaudio_INCLUDE_DIR}
     )
-    set(PORTAUDIO_LIBRARIES
-      ${PORTAUDIO_LIBRARY}
-    )
-   
-    set(PORTAUDIO_LIBRARY_DIRS
-      ${PORTAUDIO_LIBRARY_DIR}
+    set(Portaudio_LIBRARIES
+      ${Portaudio_LIBRARY}
     )
    
-    set(PORTAUDIO_VERSION
+    set(Portaudio_LIBRARY_DIRS
+      ${Portaudio_LIBRARY_DIR}
+    )
+   
+    set(Portaudio_VERSION
       18
     )
    
-    if (PORTAUDIO_INCLUDE_DIRS AND PORTAUDIO_LIBRARIES)
-       set(PORTAUDIO_FOUND TRUE)
-    endif (PORTAUDIO_INCLUDE_DIRS AND PORTAUDIO_LIBRARIES)
+    if (Portaudio_INCLUDE_DIRS AND Portaudio_LIBRARIES)
+       set(Portaudio_FOUND TRUE)
+    endif (Portaudio_INCLUDE_DIRS AND Portaudio_LIBRARIES)
    
-    if (PORTAUDIO_FOUND)
+    if (Portaudio_FOUND)
       if (NOT Portaudio_FIND_QUIETLY)
-        message(STATUS "Found Portaudio: ${PORTAUDIO_LIBRARIES}")
+        message(STATUS "Found Portaudio: ${Portaudio_LIBRARIES}")
       endif (NOT Portaudio_FIND_QUIETLY)
-    else (PORTAUDIO_FOUND)
+    else (Portaudio_FOUND)
       if (Portaudio_FIND_REQUIRED)
         message(FATAL_ERROR "Could not find Portaudio")
       endif (Portaudio_FIND_REQUIRED)
-    endif (PORTAUDIO_FOUND)
-  endif (PORTAUDIO2_FOUND)
+    endif (Portaudio_FOUND)
+  endif (Portaudio2_FOUND)
 
 
-  # show the PORTAUDIO_INCLUDE_DIRS and PORTAUDIO_LIBRARIES variables only in the advanced view
-  mark_as_advanced(PORTAUDIO_FOUND PORTAUDIO_INCLUDE_DIRS PORTAUDIO_LIBRARIES)
+  # show the Portaudio_INCLUDE_DIRS and Portaudio_LIBRARIES variables only in the advanced view
+  mark_as_advanced(Portaudio_FOUND Portaudio_INCLUDE_DIRS Portaudio_LIBRARIES)
 
-endif (PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
+endif (Portaudio_LIBRARIES AND Portaudio_INCLUDE_DIRS)
 
+# ${Portaudio_LIBRARIES} may contain multiple libraries, but 
+# the IMPORTED LOCATION and IMPORTED_IMPLIB target properties support
+# only the main library,
+list( GET Portaudio_LIBRARIES 0 Portaudio_MAIN_LIBRARY)
+
+add_library( Portaudio::portaudio SHARED IMPORTED )
+set_target_properties( Portaudio::portaudio PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${Portaudio_INCLUDE_DIRS}
+)
+if( WIN32 )
+  get_filename_component( PORTAUDIO_LIB_DIRECTORY ${Portaudio_LIBRARIES} DIRECTORY )
+  set_target_properties( Portaudio::portaudio PROPERTIES
+    IMPORTED_LOCATION ${PORTAUDIO_LIB_DIRECTORY}/portaudio_x64.dll
+    IMPORTED_IMPLIB  ${Portaudio_MAIN_LIBRARY}
+  )
+else()
+  set_target_properties( Portaudio::portaudio PROPERTIES
+    IMPORTED_LOCATION ${Portaudio_MAIN_LIBRARY}
+  )
+endif( WIN32 )

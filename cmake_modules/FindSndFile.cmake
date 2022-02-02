@@ -1,13 +1,19 @@
-# Found on https://github.com/andresy/lua---sndfile/blob/master/cmake/FindSndFile.cmake
+# Find module for libsndfile.
+# Adapted from https://github.com/andresy/lua---sndfile/blob/master/cmake/FindSndFile.cmake
 # Found on http://hg.kvats.net
+
+# Andreas Franck <andreas.franck@audioscenic.com>
+
 #
 # - Try to find libsndfile
-# 
+#
 # Once done this will define
 #
-#  SNDFILE_FOUND - system has libsndfile
-#  SNDFILE_INCLUDE_DIRS - the libsndfile include directory
-#  SNDFILE_LIBRARIES - Link these to use libsndfile
+#  Target SndFile::sndfile
+#  Variable SndFile_FOUND - system has libsndfile
+#
+#  SndFile_INCLUDE_DIRS - the libsndfile include directory
+#  SndFile_LIBRARIES - Link these to use libsndfile
 #
 #  Copyright (C) 2006  Wengo
 #
@@ -16,12 +22,12 @@
 #  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
-if (SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
+if (SndFile_LIBRARIES AND SndFile_INCLUDE_DIRS)
   # in cache already
-  set(SNDFILE_FOUND TRUE)
-else (SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
+  set(SndFile_FOUND TRUE)
+else (SndFile_LIBRARIES AND SndFile_INCLUDE_DIRS)
 
-  find_path(SNDFILE_INCLUDE_DIR
+  find_path(SndFile_INCLUDE_DIR
     NAMES
       sndfile.h
     PATHS
@@ -30,8 +36,8 @@ else (SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
       /opt/local/include
       /sw/include
   )
-  
-  find_library(SNDFILE_LIBRARY
+
+  find_library(SndFile_LIBRARY
     NAMES
       sndfile sndfile-1
     PATHS
@@ -41,28 +47,51 @@ else (SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
       /sw/lib
   )
 
-  set(SNDFILE_INCLUDE_DIRS
-    ${SNDFILE_INCLUDE_DIR}
+  set(SndFile_INCLUDE_DIRS
+    ${SndFile_INCLUDE_DIR}
   )
-  set(SNDFILE_LIBRARIES
-    ${SNDFILE_LIBRARY}
+  set(SndFile_LIBRARIES
+    ${SndFile_LIBRARY}
   )
 
-  if (SNDFILE_INCLUDE_DIRS AND SNDFILE_LIBRARIES)
-    set(SNDFILE_FOUND TRUE)
-  endif (SNDFILE_INCLUDE_DIRS AND SNDFILE_LIBRARIES)
+  if (SndFile_INCLUDE_DIRS AND SndFile_LIBRARIES)
+    set(SndFile_FOUND TRUE)
+  endif (SndFile_INCLUDE_DIRS AND SndFile_LIBRARIES)
 
-  if (SNDFILE_FOUND)
+  if (SndFile_FOUND)
     if (NOT SndFile_FIND_QUIETLY)
-      message(STATUS "Found libsndfile: ${SNDFILE_LIBRARIES}")
+      message(STATUS "Found libsndfile: ${SndFile_LIBRARIES}")
     endif (NOT SndFile_FIND_QUIETLY)
-  else (SNDFILE_FOUND)
+  else (SndFile_FOUND)
     if (SndFile_FIND_REQUIRED)
       message(FATAL_ERROR "Could not find libsndfile")
     endif (SndFile_FIND_REQUIRED)
-  endif (SNDFILE_FOUND)
+  endif (SndFile_FOUND)
 
-  # show the SNDFILE_INCLUDE_DIRS and SNDFILE_LIBRARIES variables only in the advanced view
-  mark_as_advanced(SNDFILE_INCLUDE_DIRS SNDFILE_LIBRARIES)
+  # show the SndFile_INCLUDE_DIRS and SndFile_LIBRARIES variables only in the advanced view
+  mark_as_advanced(SndFile_INCLUDE_DIRS SndFile_LIBRARIES)
 
-endif (SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
+endif (SndFile_LIBRARIES AND SndFile_INCLUDE_DIRS)
+
+add_library(SndFile::sndfile SHARED IMPORTED)
+set_target_properties( SndFile::sndfile PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${SndFile_INCLUDE_DIRS}
+)
+
+# TODO: On Windows, find the DLL file and assign it to the IMPORTED_LOCATION
+# target property
+
+if( WIN32 )
+  set_target_properties( SndFile::sndfile PROPERTIES
+    IMPORTED_IMPLIB ${SndFile_LIBRARIES}
+  )
+  get_filename_component( _SndFile_LIBRARY_DIR ${SndFile_LIBRARIES} DIRECTORY )
+  get_filename_component( _SndFile_LIBRARY_NAME_WE ${SndFile_LIBRARIES} NAME_WE )
+  get_filename_component( _SndFile_DLL_PATH ${_SndFile_LIBRARY_DIR}/${_SndFile_LIBRARY_NAME_WE}.dll ABSOLUTE )
+  set_target_properties( SndFile::sndfile PROPERTIES
+    IMPORTED_LOCATION ${_SndFile_DLL_PATH} )
+else()
+set_target_properties( SndFile::sndfile PROPERTIES
+  IMPORTED_LOCATION ${SndFile_LIBRARIES}
+)
+endif( WIN32 )

@@ -2,7 +2,7 @@
 
 #include "index_sequence.hpp"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <algorithm>
@@ -113,7 +113,7 @@ IndexSequence::IndexSequence( std::string const & val )
     ContainerType mContents;
   };
   ParseState state;
-
+  using namespace boost::placeholders;
   auto const atom = boost::proto::deep_copy( ((qi::int_[boost::bind( &ParseState::push, &state, _1 )] % qi::char_( ":" ))[boost::bind( &ParseState::finish, &state )] % (qi::char_( ',' ))) | qi::eps );
 
   bool const parseRet = qi::phrase_parse( first, last, atom,

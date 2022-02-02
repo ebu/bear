@@ -19,8 +19,7 @@ void exportAdd( pybind11::module & m )
   pybind11::class_<visr::rcl::Add, visr::AtomicComponent >( m, "Add",
 R"(Component for adding multichannel multichannel audio signals.
 
-Audio ports
-===========
+Audio ports:
 
 input_<i>"
   Audio input signals to be added, numbered from 0..`numInputs`-1. The width is  determined by the 

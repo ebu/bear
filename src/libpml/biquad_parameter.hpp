@@ -5,6 +5,8 @@
 
 #include "matrix_parameter_config.hpp" // might be a forward declaration
 
+#include "export_symbols.hpp"
+
 #include <librbbl/biquad_coefficient.hpp>
 
 #include <libvisr/typed_parameter_base.hpp>
@@ -42,7 +44,7 @@ template<> struct BiquadMatrixParameterType<double>
 } // unnamed
 
 template<typename CoeffType >
-class BiquadParameterMatrix: public TypedParameterBase<BiquadParameterMatrix<CoeffType>, MatrixParameterConfig, BiquadMatrixParameterType<CoeffType>::ptype() > ,
+class VISR_PML_LIBRARY_SYMBOL BiquadParameterMatrix: public TypedParameterBase<BiquadParameterMatrix<CoeffType>, MatrixParameterConfig, BiquadMatrixParameterType<CoeffType>::ptype() > ,
   public rbbl::BiquadCoefficientMatrix<CoeffType>
 {
 public:

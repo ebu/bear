@@ -58,7 +58,7 @@ Class AudioInputBase
 
       
 Template class AudioInputT
-"""""""""""""""""""""""""
+""""""""""""""""""""""""""
 
 .. doxygenclass:: visr::AudioInputT
    :project: visr

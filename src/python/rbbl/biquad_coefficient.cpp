@@ -67,6 +67,8 @@ namespace
         std::stringstream stream( jsonRep );
         self.loadJson( stream );
       } )
+      .def_static( "fromJson", []( std::string const & str ){ return BiquadCoefficient<CoeffType>::fromJson( str ); } )
+      .def_static( "fromXml", []( std::string const & str ){ return BiquadCoefficient<CoeffType>::fromXml( str ); } )
       .def( "loadXml", []( BiquadCoefficient<CoeffType> & self, std::string const & xmlRep )
       {
         std::stringstream stream( xmlRep );
@@ -95,8 +97,8 @@ namespace
           }
           return inst;
         } ), py::arg( "initList" ), "Constructor from coefficient vector" )
-      .def_static( "fromJson", []( BiquadCoefficientList<CoeffType> const &, std::string const & str ){ return BiquadCoefficientList<CoeffType>::fromJson( str ); } )
-      .def_static( "fromXml", []( BiquadCoefficientList<CoeffType> const &, std::string const & str ){ return BiquadCoefficientList<CoeffType>::fromXml( str ); } )
+      .def_static( "fromJson", []( std::string const & str ){ return BiquadCoefficientList<CoeffType>::fromJson( str ); } )
+      .def_static( "fromXml", []( std::string const & str ){ return BiquadCoefficientList<CoeffType>::fromXml( str ); } )
       .def_property( "size", &BiquadCoefficientList<CoeffType>::size, &BiquadCoefficientList<CoeffType>::size )
       .def( "resize", &BiquadCoefficientList<CoeffType>::size )
       .def( "__setitem__", []( BiquadCoefficientList<CoeffType> & self, std::size_t idx, BiquadCoefficient<CoeffType> const & val ){ self.at(idx) = val; } )
@@ -114,6 +116,8 @@ namespace
   {
     py::class_<BiquadCoefficientMatrix<CoeffType> >( m, className )
      .def( py::init<std::size_t, std::size_t>(), py::arg("numberOfFilters"), py::arg("numberOfBiquads") )
+     .def_static( "fromJson", []( std::string const & str ){ return BiquadCoefficientMatrix<CoeffType>::fromJson( str ); } )
+     .def_static( "fromXml", []( std::string const & str ){ return BiquadCoefficientMatrix<CoeffType>::fromXml( str ); } )
      .def_property_readonly( "numberOfFilters", &BiquadCoefficientMatrix<CoeffType>::numberOfFilters )
      .def_property_readonly( "numberOfSections", &BiquadCoefficientMatrix<CoeffType>::numberOfSections )
      .def( "resize", &BiquadCoefficientMatrix<CoeffType>::resize, py::arg("numberOfFilters"), py::arg( "numberOfBiquads" ) )
@@ -124,6 +128,10 @@ namespace
         { self( idx[0].cast<std::size_t>(), idx[1].cast<std::size_t>() ) = val; } )
      .def( "__getitem__", []( BiquadCoefficientMatrix<CoeffType> & self, pybind11::tuple idx ) { return self( idx[0].cast<std::size_t>(), idx[1].cast<std::size_t>() ); }, pybind11::arg( "index" ) )
      .def( "setFilter", &BiquadCoefficientMatrix<CoeffType>::setFilter, py::arg( "filterIdx" ), py::arg( "newFilters" ) )
+     .def( "loadJson", static_cast< void( BiquadCoefficientMatrix<CoeffType>::*)(std::string const &)>(&BiquadCoefficientMatrix<CoeffType>::loadJson ) )
+     .def( "loadXml", static_cast< void(BiquadCoefficientMatrix<CoeffType>::*)(std::string const &)>(&BiquadCoefficientMatrix<CoeffType>::loadJson) )
+     .def( "writeJson", []( BiquadCoefficientMatrix<CoeffType> const & self ) { std::string str; self.writeJson( str ); return self; } )
+     .def( "writeXml", [](BiquadCoefficientMatrix<CoeffType> const & self ){ std::string str; self.writeXml( str ); return self; } )
     ;
   }
 

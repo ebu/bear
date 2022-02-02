@@ -47,27 +47,11 @@ void GainFader<ElementType>::scale( ElementType const * input, ElementType * out
 {
   blockIndex = std::min( blockIndex, mInterpolationPeriods );
   efl::ErrorCode res;
-  res = efl::vectorFill( startGain, mTempBuffer.data(), mBlockSize );
-  if( res != efl::noError )
+  if( (res = efl::vectorRampScaling( input, mInterpolationRamp.data() + blockIndex * mBlockSize,
+    output, startGain, endGain-startGain, mBlockSize, false/*accumulate*/,
+    mInterpolationRamp.alignmentElements() )) != efl::noError )
   {
-    throw std::runtime_error( detail::composeMessageString( "GainFader: Error creating offset for interpolation ramp: ", efl::errorMessage( res )));
-  }
-  res = efl::vectorMultiplyConstantAddInplace( endGain - startGain /*constFactor*/,
-                                            mInterpolationRamp.data() + blockIndex * mBlockSize /*factor*/,
-                                            mTempBuffer.data() /*accumulator*/,
-                                            mBlockSize /*numElements*/,
-                                            mTempBuffer.alignmentElements() /*alignment*/ );
-  if( res != efl::noError )
-  {
-    throw std::runtime_error( detail::composeMessageString( "GainFader: Error creating scaled interpolation ramp: ", efl::errorMessage( res )));
-  }
-
-
-  // Scale the input signals.
-  res = efl::vectorMultiply( mTempBuffer.data(), input, output, mBlockSize, mTempBuffer.alignmentElements() );
-  if( res != efl::noError )
-  {
-    throw std::runtime_error( detail::composeMessageString( "GainFader: Error scaling input signal: ", efl::errorMessage( res )));
+    throw std::runtime_error( detail::composeMessageString( "GainFader: Error during scaling operation: ", efl::errorMessage( res )));
   }
 }
 
@@ -78,27 +62,11 @@ void GainFader<ElementType>::scaleAndAccumulate( ElementType const * input, Elem
 {
   blockIndex = std::min( blockIndex, mInterpolationPeriods );
   efl::ErrorCode res;
-  res = efl::vectorFill( startGain, mTempBuffer.data(), mBlockSize );
-  if( res != efl::noError )
+  if( (res = efl::vectorRampScaling( input, mInterpolationRamp.data() + blockIndex * mBlockSize,
+    outputAcc, startGain, endGain-startGain, mBlockSize, true/*accumulate*/,
+    mInterpolationRamp.alignmentElements() )) != efl::noError )
   {
-    throw std::runtime_error( detail::composeMessageString( "GainFader: Error creating offset for interpolation ramp: ", efl::errorMessage( res ) ) );
-  }
-  res = efl::vectorMultiplyConstantAddInplace( endGain - startGain /*constFactor*/,
-    mInterpolationRamp.data() + blockIndex * mBlockSize /*factor*/,
-    mTempBuffer.data() /*accumulator*/,
-    mBlockSize /*numElements*/,
-    mTempBuffer.alignmentElements() /*alignment*/ );
-  if( res != efl::noError )
-  {
-    throw std::runtime_error( detail::composeMessageString( "GainFader: Error creating scaled interpolation ramp: ", efl::errorMessage( res ) ) );
-  }
-
-
-  // Scale the input signals.
-  res = efl::vectorMultiplyAddInplace( mTempBuffer.data(), input, outputAcc, mBlockSize, mTempBuffer.alignmentElements() );
-  if( res != efl::noError )
-  {
-    throw std::runtime_error( detail::composeMessageString( "GainFader: Error scaling input signal: ", efl::errorMessage( res ) ) );
+    throw std::runtime_error( detail::composeMessageString( "GainFader: Error during scaling operation: ", efl::errorMessage( res )));
   }
 }
 

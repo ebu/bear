@@ -5,11 +5,10 @@
 
 #include <libvisr/audio_input.hpp>
 #include <libvisr/audio_output.hpp>
+#include <libvisr/atomic_component.hpp>
 #include <libvisr/composite_component.hpp>
 
-#include <librcl/add.hpp>
-
-#include <libaudiointerfaces/portaudio_interface.hpp>
+#include <memory>
 
 namespace visr
 {
@@ -18,21 +17,52 @@ namespace apps
 namespace feedthrough
 {
 
+namespace detail
+{
+
+/**
+ * Component to consume unused audio inputs.
+ * @todo Consider moving to rcl library (make it more flexible, e.g.,
+ * by accepting selectable sample formats).
+ */
+class AudioTerminator: public AtomicComponent
+{
+public:
+  AudioTerminator( SignalFlowContext & context, const char* name,
+		   CompositeComponent * parent,
+		   std::size_t numberOfChannels )
+    : AtomicComponent( context, name, parent )
+    , mInput( "input", *this, numberOfChannels )
+  {}
+
+  virtual ~AudioTerminator() override = default;
+
+  void process() override
+  {
+    // Do nothing
+  }
+private:
+  AudioInput mInput;
+};
+
+} // unnamed namespace
+
 class Feedthrough: public CompositeComponent
 {
 public:
-  explicit Feedthrough( SignalFlowContext & context, const char* name, CompositeComponent * parent = nullptr );
+  explicit Feedthrough( SignalFlowContext & context, const char* name,
+			CompositeComponent * parent,
+			std::size_t inputChannels,
+			std::size_t outputChannels );
 
   ~Feedthrough();
-
-  /*virtual*/ void process( );
 
 private:
   AudioInput mInput;
 
   AudioOutput mOutput;
 
-  rcl::Add mSum;
+  detail::AudioTerminator mTerminator;
 };
 
 } // namespace feedthrough

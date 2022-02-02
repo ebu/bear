@@ -99,7 +99,9 @@ public:
 
   static MatrixParameter fromStream( std::istream & stream, std::size_t alignment = 0 );
 
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
   static MatrixParameter fromAudioFile( std::string const & fileName, std::size_t alignment = 0 );
+#endif
 
   static MatrixParameter fromTextFile( std::string const & fileName, std::size_t alignment = 0 );
   //@}

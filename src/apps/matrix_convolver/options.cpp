@@ -46,6 +46,9 @@ Options::Options()
   registerOption<std::size_t>( "max-filters", "Maximum number of impulse responses that can be stored." );
     
   registerOption<std::string>( "fft-library", "Specify the FFT implementation to be used. Defaults to the default implementation for the platform." );
+
+    registerOption<bool>("dsp-optimisation,d", "Activate platform-specific optimised DSP routines. Default: off" );
+
 }
 
 Options::~Options()

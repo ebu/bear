@@ -3,8 +3,6 @@
 #ifndef VISR_LIBEFL_DENORMALISED_NUMBER_HANDLING_HPP_INCLUDED
 #define VISR_LIBEFL_DENORMALISED_NUMBER_HANDLING_HPP_INCLUDED
 
-#include "denormalised_number_handling.hpp"
-
 #include "export_symbols.hpp"
 
 #include <cstdint>

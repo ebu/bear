@@ -3,22 +3,19 @@
 set( APPLICATION_NAME pythoncomponents_test )
 
 set( SOURCES
+pml_initialisation.cpp
 test_main.cpp
 wrapper.cpp
 )
 
-add_executable( ${APPLICATION_NAME} ${SOURCES} ) 
+add_executable( ${APPLICATION_NAME} ${SOURCES} )
 
-target_include_directories( ${APPLICATION_NAME} PRIVATE ${PYTHON_INCLUDE_DIR} )
-# The pybind11 header is used to include Python.h.
-# This avoids preprocessor magic to work around platform specifics.
-target_include_directories( ${APPLICATION_NAME} PRIVATE ${PYBIND11_INCLUDE_DIR} )
-
-target_link_libraries( ${APPLICATION_NAME} pythoncomponents_static )
-target_link_libraries( ${APPLICATION_NAME} pythonsupport_static )
-target_link_libraries( ${APPLICATION_NAME} rrl_static )
-target_link_libraries( ${APPLICATION_NAME} Boost::filesystem )
-target_link_libraries( ${APPLICATION_NAME} Boost::unit_test_framework )
+target_link_libraries( ${APPLICATION_NAME} PRIVATE pythoncomponents_shared )
+target_link_libraries( ${APPLICATION_NAME} PRIVATE pythonsupport_shared )
+target_link_libraries( ${APPLICATION_NAME} PRIVATE rrl_shared )
+target_link_libraries( ${APPLICATION_NAME} PRIVATE pml_shared )
+target_link_libraries( ${APPLICATION_NAME} PRIVATE Boost::filesystem )
+target_link_libraries( ${APPLICATION_NAME} PRIVATE Boost::unit_test_framework )
 
 if( NOT Boost_USE_STATIC_LIBS )
   target_compile_definitions(${APPLICATION_NAME} PRIVATE -DBOOST_ALL_DYN_LINK )
@@ -34,8 +31,28 @@ target_compile_definitions( ${APPLICATION_NAME} PRIVATE CMAKE_CURRENT_SOURCE_DIR
 # Encode the path to the visr Python external into a compile definition
 target_compile_definitions( ${APPLICATION_NAME} PRIVATE PYTHON_MODULE_INSTALL_DIRECTORY="$<TARGET_FILE_DIR:visrpython>" )
 
-set_target_properties( ${APPLICATION_NAME} PROPERTIES 
+set_target_properties( ${APPLICATION_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}/test_binaries)
 
-add_test(NAME ${APPLICATION_NAME} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
+set_target_properties( ${APPLICATION_NAME} PROPERTIES FOLDER unit_tests )
+
+add_test(NAME ${APPLICATION_NAME} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_binaries/${APPLICATION_NAME} )
+
+include( adjust_test_environment )
+adjustPythonTestEnvironment( ${APPLICATION_NAME} visrpython )
+
+# The PYTHONHOME environment variable must be set in order to let the Python
+# interpreter embedded in the unit test binary start the correct interpreter,
+# i.e., the one corresponding to the Python environment used for building
+# the externals.
+# Retrieve the correct setting for PYTHONHOME from the Python executable.
+execute_process(
+  COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.base_prefix)"
+OUTPUT_VARIABLE PYTHON_BASE_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE )
+set_property(TEST ${APPLICATION_NAME} APPEND PROPERTY ENVIRONMENT
+  "PYTHONHOME=${PYTHON_BASE_PREFIX}" )
+# Disable leak checking because the memory handling of Python interpreter
+# causes leak reports (false positives?) that are outside our responsibility.
+set_property(TEST ${APPLICATION_NAME} APPEND PROPERTY ENVIRONMENT
+  "BOOST_TEST_DETECT_MEMORY_LEAK=0" )

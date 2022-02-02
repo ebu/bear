@@ -14,7 +14,7 @@ set(CPP_FILE_NAME ${CPP_FILE}.cpp)
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
 # <AF> Don't use export files, put export the mexFunction explicitly.
-add_library(${PROJECT_NAME} MODULE ${CPP_FILE_NAME} ${ADDITIONAL_CPP_FILES}  ${CMAKE_SOURCE_DIR}/cmake_modules/Matlabdef.def )
+add_library(${PROJECT_NAME} MODULE ${CPP_FILE_NAME} ${ADDITIONAL_CPP_FILES}  ${PROJECT_SOURCE_DIR}/cmake_modules/Matlabdef.def )
 
 # Set the name of the mex object (and thus the Matlab function to be called) independently
 # of the project name.
@@ -26,5 +26,7 @@ target_link_libraries(${PROJECT_NAME} signalflows rbbl rcl visr_static efl mexsu
 
 # Put directly into the mex/ subdirectory
 set_target_properties(${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/mex" )
+
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER matlab_externals )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_BINARY_DIR}/mex )

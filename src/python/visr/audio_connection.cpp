@@ -28,8 +28,16 @@ void exportAudioConnection( pybind11::module& m )
      return new impl::AudioConnection( &(sendPort.implementation()), sendIndices, &(receivePort.implementation()), receiveIndices );
    }), pybind11::arg("sendPort"), pybind11::arg("sendIndices"), pybind11::arg("receivePort"), pybind11::arg("receiveIndices"), "Full constructor (usually not needed)." )
    .def( "__lt__", &impl::AudioConnection::operator<, pybind11::arg("rhs"), "Comparison operator (for ordering connections." )
-   .def_property_readonly( "sender", []( impl::AudioConnection const & self ){ return self.sender()->containingPort(); }, pybind11::return_value_policy::reference )
-   .def_property_readonly( "receiver", []( impl::AudioConnection const & self ) { return self.receiver()->containingPort(); } , pybind11::return_value_policy::reference )
+   .def_property_readonly( "sender",
+                           []( impl::AudioConnection const & self ) -> AudioPortBase const &
+                           {
+                             return self.sender()->containingPort();
+                           }, pybind11::return_value_policy::reference )
+   .def_property_readonly( "receiver",
+                           []( impl::AudioConnection const & self ) -> AudioPortBase const &
+                           {
+                             return self.receiver()->containingPort();
+                           }, pybind11::return_value_policy::reference )
    .def_property_readonly( "sendIndices", &impl::AudioConnection::sendIndices )
    .def_property_readonly( "receiveIndices", &impl::AudioConnection::receiveIndices )
    .def( "__str__", []( impl::AudioConnection const & conn )

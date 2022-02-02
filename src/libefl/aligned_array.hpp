@@ -282,38 +282,20 @@ void AlignedArray<ElementType>::swap( AlignedArray<ElementType>& rhs )
   std::swap( mAlignedStorage, rhs.mAlignedStorage );
 }
 
-#ifdef __GLIBCXX__
-// Proposed standard-compliant implementation:
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57350
-// Published under the MIT license http://opensource.org/licenses/MIT
-// Copyright notice (from https://code.google.com/p/c-plus/source/browse/src/util.h):
-// // Cplus project, general-purpose utilities.
-// // copyright David Krauss, created 8/26/11
-static inline void *alignWorkaround( std::size_t alignment, std::size_t size,
-  void *&ptr, std::size_t &space )
-{
-  std::uintptr_t pn = reinterpret_cast< std::uintptr_t >(ptr);
-  std::uintptr_t aligned = (pn + alignment - 1) & -alignment;
-  std::size_t padding = aligned - pn;
-  if( space < size + padding ) return nullptr;
-  space -= padding;
-  return ptr = reinterpret_cast< void * >(aligned);
-}
-#endif
-
 template< typename ElementType>
 void AlignedArray<ElementType>::allocate( std::size_t length )
 {
-  const std::size_t worstCaseLengthElements( length + mAlignment - 1 );
+  // Special case if the guaranteed alignment of the memory allocation
+  // is smaller than the size of the element. This might happen, for example,
+  // with std::complex<> types.
+  const std::size_t worstCaseLengthElements =
+    (alignof(ElementType) == sizeof(ElementType))
+    ? length + mAlignment - 1 : length + mAlignment;
   mRawStorage = new ElementType[worstCaseLengthElements];
   void* retPtr = static_cast<void*>(mRawStorage);
   std::size_t space = worstCaseLengthElements*sizeof(ElementType);
   // ignoring the return value is safe, because it is identical to the updated retPtr parameter.
-#ifdef __GLIBCXX__
-  alignWorkaround( mAlignment*sizeof(ElementType), length*sizeof(ElementType), retPtr, space );
-#else
   std::align( mAlignment*sizeof(ElementType), length*sizeof(ElementType), retPtr, space );
-#endif
   if( retPtr == nullptr )
   {
     deallocate(); // Set the object into a defined, valid state.

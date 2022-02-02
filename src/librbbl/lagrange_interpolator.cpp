@@ -15,10 +15,8 @@ namespace rbbl
 template <typename SampleType, std::size_t order >
 LagrangeInterpolator<SampleType, order >::LagrangeInterpolator( std::size_t maxNumSamples,
                                                                 std::size_t alignmentElements )
-  : mBaseOffsets( maxNumSamples )
-  , mDelays(  maxNumSamples, alignmentElements )
+  : mDelays(  maxNumSamples, alignmentElements )
   , mGains( maxNumSamples, alignmentElements )
-  , mIntersamplePositions( maxNumSamples, alignmentElements )
 {
 }
 
@@ -66,28 +64,22 @@ void LagrangeInterpolator<SampleType, order>::interpolate( SampleType const * ba
     throw std::runtime_error( detail::composeMessageString( "LagrangeInterpolator::interpolate(): Error during delay ramp computation:",
                                                             efl::errorMessage(res)) );
   }
-  // This needs to be replaces by efl functions in time (round and integer conversion functions are costly in the default implementation.
-  // std::round always rounds away from zero
-  std::transform( mDelays.data(), mDelays.data() + numSamples, mIntersamplePositions.data(),
-                  []( SampleType val ){ return std::round( val ); } );
-  std::transform( mIntersamplePositions.data(), mIntersamplePositions.data() + numSamples, mBaseOffsets.data(),
-                  []( SampleType val ){ return static_cast<std::ptrdiff_t>(val); } );
-
-  res = efl::vectorSubtractInplace( mDelays.data(), mIntersamplePositions.data(), numSamples,
-                                    mIntersamplePositions.alignmentElements() );
-  if( res != efl::noError )
-  {
-    throw std::runtime_error( detail::composeMessageString( "LagrangeInterpolator::interpolate(): Error computing intersample positions.",
-                                                            efl::errorMessage(res)) );
-  }
 
   std::array<SampleType, order+1> lagrangeCoefficients;
   for( std::size_t sampleIdx( 0 ); sampleIdx < numSamples; ++sampleIdx )
   {
-    mCoeffCalculator.calculateCoefficients( mIntersamplePositions[sampleIdx],
+    SampleType delay = mDelays[sampleIdx];
+    // does the same thing as std::round, minus some edge cases that aren't
+    // important to us
+    std::ptrdiff_t baseOffset = delay > 0
+                                     ? delay + static_cast<SampleType>(0.5)
+                                     : delay - static_cast<SampleType>(0.5);
+    SampleType intersamplePosition = delay - baseOffset;
+
+    mCoeffCalculator.calculateCoefficients( intersamplePosition,
                                             &lagrangeCoefficients[0] );
-    result[sampleIdx] = mGains[sampleIdx] * std::inner_product( lagrangeCoefficients.begin(), lagrangeCoefficients.end(),
-                                                                basePointer + mBaseOffsets[sampleIdx],
+    result[sampleIdx] = mGains[sampleIdx] * std::inner_product( lagrangeCoefficients.rbegin(), lagrangeCoefficients.rend(),
+                                                                basePointer + baseOffset,
                                                                 static_cast<SampleType>(0.0) );
   }
 }

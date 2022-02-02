@@ -36,7 +36,9 @@ CoreConvolverUniform( std::size_t numberOfInputs,
  , mTimeDomainTransformBuffer( mDftSize, mAlignment )
  , mFilterPartitionsFrequencyDomain( maxFilterEntries, mDftRepresentationSizePadded * mNumberOfFilterPartitions, mComplexAlignment )
  , mFrequencyDomainAccumulator( mDftRepresentationSizePadded, mComplexAlignment )
- , mFftRepresentation( FftWrapperFactory<SampleType>::create( fftImplementation, mDftSize, alignment ) )
+ // Note: the FFT wrapper expects the alignmnent as number complex elements, whereas alignmnet is given as a
+ //  multiple of the real-valued sampe size.
+ , mFftRepresentation( FftWrapperFactory<SampleType>::create( fftImplementation, mDftSize, alignment/2 ) )
  , mFilterScalingFactor( calculateFilterScalingFactor() )
 {
   initFilters( initialFilters );
@@ -56,79 +58,6 @@ processInputs( SampleType const * const input, std::size_t channelStride, std::s
     mFftRepresentation->forwardTransform( mInputBuffers.getReadPointer( chIdx, mDftSize ), getFdlBlock( chIdx, 0 ) );
   }
 }
-
-#if 1
-//// 'old' implementation
-//template< typename SampleType >
-//void CoreConvolverUniform<SampleType>::
-//processOutputs( SampleType * const output, std::size_t channelStride, std::size_t alignment )
-//{
-//  for( std::size_t outputIdx( 0 ); outputIdx < mNumberOfOutputs; ++outputIdx )
-//  {
-//    // get an iterator pair containing all routings for the current output.
-//    // Not that this depends on the comparison function for the map
-//    // keys, which orders all routings for a given output cosecutively.
-//    typename RoutingTable::const_iterator start = mRoutingTable.lower_bound( RoutingKey( 0, outputIdx ) );
-//    typename RoutingTable::const_iterator nextStart = mRoutingTable.lower_bound( RoutingKey( 0, outputIdx + 1 ) );
-//
-//    bool addFlag = false; 
-//    for( typename RoutingTable::const_iterator routingIt( start ); routingIt != nextStart; ++routingIt )
-//    {
-//      std::size_t const inputIdx = routingIt->first.inputIdx;
-//      std::size_t const filterIdx = routingIt->second.filterIdx;
-//      SampleType const scaleFactor = routingIt->second.gainLinear;
-//
-//      processFilter( inputIdx, filterIdx, scaleFactor, mFrequencyDomainSum.data(), addFlag );
-//      addFlag = true;
-//    } // iterate through all routings for a given output port.
-//    // Perform the inverse transformation
-//    transformOutput( outputIdx, mFrequencyDomainSum.data(), output + channelStride * outputIdx );
-//  }
-//}
-#else
-template< typename SampleType >
-void CoreConvolverUniform<SampleType>::
-processOutputs( SampleType * const output, std::size_t channelStride, std::size_t alignment )
-{
-  std::size_t currOut = 0;
-  std::size_t filtersAtCurrOutput = 0;
-  for( typename RoutingTable::const_iterator tableIt = mRoutingTable.begin(); tableIt != mRoutingTable.end(); ++tableIt )
-  {
-    std::size_t thisOut = tableIt->outputIdx;
-    if( thisOut == currOut )
-    {
-      bool const addFlag = (filtersAtCurrOutput > 0 );
-      processFilter( tableIt->second->inputIdx, tableIt->second->filterIdx, tableIt->second->gainLinear, addFlag );
-    }
-    else if( thisOut == currOut + 1 )
-    {
-    }
-  }
-
-  typename RoutingTable::const_iterator tableIt = mRoutingTable.begin();
-  for( std::size_t outputIdx( 0 ); outputIdx < mNumberOfOutputs; ++outputIdx )
-  {
-    // get an iterator pair containing all routings for the current output.
-    // Not that this depends on the comparison function for the map
-    // keys, which orders all routings for a given output cosecutively.
-    typename RoutingTable::const_iterator start = mRoutingTable.lower_bound( RoutingKey( 0, outputIdx ) );
-    typename RoutingTable::const_iterator nextStart = mRoutingTable.lower_bound( RoutingKey( 0, outputIdx + 1 ) );
-
-    bool addFlag = false;
-    for( typename RoutingTable::const_iterator routingIt( start ); routingIt != nextStart; ++routingIt )
-    {
-      std::size_t const  inputIdx = routingIt->first.inputIdx;
-      std::size_t const  filterIdx = routingIt->second.filterIdx;
-      SampleType const scaleFactor = routingIt->second.gainLinear;
-
-      processFilter( inputIdx, filterIdx, scaleFactor, mFrequencyDomainSum.data(), addFlag );
-      addFlag = true;
-    } // iterate through all routings for a given output port.
-      // Perform the inverse transformation
-    transformOutput( outputIdx, mFrequencyDomainSum.data(), output + channelStride * outputIdx );
-  }
-}
-#endif
 
 template< typename SampleType >
 void CoreConvolverUniform<SampleType>::processFilter( std::size_t inputIndex, std::size_t filterIndex, 
@@ -254,84 +183,6 @@ void CoreConvolverUniform<SampleType>::advanceFDL()
 {
   mFdlCycleOffset = (mFdlCycleOffset + mNumberOfFilterPartitions - 1) % mNumberOfFilterPartitions; // The '+ mNumberOfFilterPartitions' is to avoid pecularities of % when the argument is negative.
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// Manipulation of the routing table
-
-//template< typename SampleType>
-//void CoreConvolverUniform<SampleType>::clearRoutingTable( )
-//{
-//  mRoutingTable.clear();
-//}
-//
-//template< typename SampleType>
-//void CoreConvolverUniform<SampleType>::initRoutingTable( RoutingList const & routings )
-//{
-//  clearRoutingTable();
-//  if( routings.size() > maxNumberOfRoutingPoints() )
-//  {
-//    throw std::invalid_argument( "CoreConvolverUniform:initRoutingTable() exceeds the maximum admissible number of elements " );
-//  }
-//  for( RoutingEntry const & v : routings )
-//  {
-//    setRoutingEntry( v );
-//  }
-//  assert( mRoutingTable.size( ) <= maxNumberOfRoutingPoints( ) );
-//}
-//
-//template< typename SampleType>
-//void CoreConvolverUniform<SampleType>::setRoutingEntry( RoutingEntry const & routing )
-//{
-//  setRoutingEntry( routing.inputIndex, routing.outputIndex, routing.filterIndex, routing.gainLinear );
-//}
-//
-//template< typename SampleType>
-//void CoreConvolverUniform<SampleType>::setRoutingEntry( std::size_t inputIdx,
-//                                                                std::size_t outputIdx,
-//                                                                std::size_t filterIdx,
-//                                                                RoutingEntry::GainType gain )
-//{
-//  assert( mRoutingTable.size() <= maxNumberOfRoutingPoints() );
-//  if( inputIdx >= numberOfInputs() )
-//  {
-//    throw std::invalid_argument( "CoreConvolverUniform::setRoutingEntry(): Input index exceeds the admissible range." );
-//  }
-//  if( outputIdx >= numberOfOutputs() )
-//  {
-//    throw std::invalid_argument( "CoreConvolverUniform::setRoutingEntry(): Output index exceeds the admissible range." );
-//  }
-//  if( filterIdx >= maxNumberOfFilterEntries() )
-//  {
-//    throw std::invalid_argument( "CoreConvolverUniform::setRoutingEntry(): Filter index exceeds the admissible range." );
-//  }
-//
-//  typename RoutingTable::iterator findIt = mRoutingTable.find( RoutingKey( inputIdx, outputIdx ) );
-//  if( findIt != mRoutingTable.end() )
-//  {
-//    findIt->second = RoutingValue( filterIdx, static_cast<SampleType>(gain) );
-//  }
-//  else
-//  {
-//    if( mRoutingTable.size( ) >= maxNumberOfRoutingPoints( ) )
-//    {
-//      throw std::invalid_argument( "CoreConvolverUniform::setRoutingEntry(): Maximum number of routing points already reached." );
-//    }
-//    auto res = mRoutingTable.insert( std::make_pair( RoutingKey( inputIdx, outputIdx ),
-//      RoutingValue( filterIdx, static_cast<SampleType>(gain) ) ) );
-//    if( !res.second )
-//    {
-//      throw std::invalid_argument( "CoreConvolverUniform::setRoutingEntry(): Adding new routing point failed." );
-//    }
-//  }
-//  assert( mRoutingTable.size( ) <= maxNumberOfRoutingPoints( ) );
-//}
-//
-//template< typename SampleType>
-//bool CoreConvolverUniform<SampleType>::removeRoutingEntry( std::size_t inputIdx, std::size_t outputIdx )
-//{
-//  std::size_t numErased = mRoutingTable.erase( RoutingKey( inputIdx, outputIdx ) );
-//  return (numErased > 0);
-//}
 
 template< typename SampleType>
 void CoreConvolverUniform<SampleType>::clearFilters()

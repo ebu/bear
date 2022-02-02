@@ -19,14 +19,32 @@ namespace rcl
 
 void exportCAPGainCalculator( pybind11::module & m )
 {
+  namespace py = pybind11;
+
   using visr::rcl::CAPGainCalculator;
 
-  pybind11::class_<CAPGainCalculator, visr::AtomicComponent>( m, "CAPGainCalculator" )
-   .def( pybind11::init<visr::SignalFlowContext const&, char const *, visr::CompositeComponent*,
-     std::size_t, panning::LoudspeakerArray const & >(),
-      pybind11::arg("context"), pybind11::arg("name"), pybind11::arg("parent") = static_cast<visr::CompositeComponent*>(nullptr),
-      pybind11::arg( "numberOfObjects" ),
-      pybind11::arg( "arrayConfig" ) )
+  py::class_<CAPGainCalculator, visr::AtomicComponent> cap( m, "CAPGainCalculator" );
+
+  py::enum_<CAPGainCalculator::PanningMode>( cap, "PanningMode" )
+    .value( "Nothing", CAPGainCalculator::PanningMode::Nothing )
+    .value( "LF", CAPGainCalculator::PanningMode::LF )
+    .value( "HF", CAPGainCalculator::PanningMode::HF )
+    ;
+  
+  cap
+   .def( py::init< visr::SignalFlowContext const&,
+	 char const *, visr::CompositeComponent*,
+	 std::size_t,
+	 panning::LoudspeakerArray const &,
+	 CAPGainCalculator::PanningMode,
+	 bool>(),
+	 py::arg("context"),
+	 py::arg("name"),
+	 py::arg("parent") = static_cast<visr::CompositeComponent*>(nullptr),
+	 py::arg( "numberOfObjects" ),
+	 py::arg( "arrayConfig" ),
+	 py::arg( "panningMode" ) = CAPGainCalculator::PanningMode::LF,
+	 py::arg( "hfGainOutput" ) = false )
   ; 
 }
 

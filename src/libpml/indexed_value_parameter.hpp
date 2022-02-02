@@ -40,7 +40,6 @@ template<> struct IndexedValueParameterType<std::string >
  */
 template<typename IndexType, typename ValueType >
 class VISR_PML_LIBRARY_SYMBOL IndexedValueParameter:
-  public std::pair< std::size_t, std::string >,
   public TypedParameterBase< IndexedValueParameter<IndexType, ValueType>, EmptyParameterConfig, IndexedValueParameterType<ValueType>::ptype() >
 {
 public:

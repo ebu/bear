@@ -64,7 +64,7 @@ public:
     { Type::lowshelf, "lowshelf" },{ Type::highshelf, "highshelf" },
     { Type::allpass, "allpass" } } )
   {
-    for( ForwardMap::value_type const v : mFwdMap )
+    for( ForwardMap::value_type const & v : mFwdMap )
     {
       mReverseMap.insert( std::make_pair( v.second, v.first ) );
     }

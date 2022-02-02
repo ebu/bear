@@ -32,11 +32,13 @@ private:
     LoudspeakerArray const * m_array;
     efl::BasicMatrix<Afloat> m_gain;
     XYZ m_listenerPos;
-    XYZ m_listenerAuralAxis; // Normal vector through ears
+    XYZ m_listenerAuralAxis; // normal vector through ears
     XYZ const * m_sourcePos;
     std::size_t m_nSources;
-    Afloat m_maxGain = 10.0f;
-    Afloat m_reorientMatrix[3][3] = {{1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f}};
+    Afloat m_maxGainPreComp = 1.5f; // max panning gain prior to distance compensation
+    Afloat m_maxGain = 10.0f; // overall max panning gain
+//  Afloat m_reorientMatrix[3][3] = {{1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f}};
+    bool m_HFmode = false;  // experimental
     
     
 public:
@@ -53,10 +55,14 @@ public:
     }
 
     int setListenerPosition(Afloat x, Afloat y, Afloat z){
-
+//      printf("setListenerPosition %f %f %f\n",x,y,z);
+        
+        
 #ifdef CAP_DEBUG_MESSAGES
       printf("setListenerPosition %f %f %f\n",x,y,z);
 #endif
+
+        // printf("setListenerPosition %f %f %f\n",x,y,z);
 
         m_listenerPos.set(x, y, z);
 
@@ -96,6 +102,8 @@ public:
     }
     
     int setMaxGain(Afloat mg) { m_maxGain = mg; return 0; }
+    
+    int setHFmode() { m_HFmode = true; return 0; }
     
     std::size_t getNumSpeakers() const { return m_array->getNumSpeakers(); }
     

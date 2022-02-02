@@ -66,7 +66,10 @@ void AllRAD::updateDecodingCoefficients()
     mRealDecoder.calculateGains( mRegularLoudspeakerPositions(regSpeakerIdx,0),
                                  mRegularLoudspeakerPositions(regSpeakerIdx,1),
                                  mRegularLoudspeakerPositions(regSpeakerIdx,2),
-                                 mRegularToRealDecodeCoefficients.row( regSpeakerIdx ) );
+                                 mRegularToRealDecodeCoefficients.row( regSpeakerIdx ),
+                                 false /* planeWave=false, i.e., use the standard VBAP point source algorithm.
+                                         This means that the source positions are translated by the tracked listener position.*/
+                                );
   }
   efl::ErrorCode const res = efl::product( mRegularDecodeCoefficients.data(),
                                       mRegularToRealDecodeCoefficients.data(),

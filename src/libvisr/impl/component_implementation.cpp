@@ -12,6 +12,7 @@
 #include "../signal_flow_context.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <ciso646>
 #include <cstring>
 #include <exception>
@@ -31,7 +32,11 @@ ComponentImplementation::ComponentImplementation( Component & component,
  , mContext( context )
  , mName( componentName )
  , mParent( parent )
+ , mTime( parent == nullptr
+         ? std::shared_ptr<TimeImplementation>(new TimeImplementation( context ))
+         : parent->time().mImpl )
 {
+  assert( mTime.mImpl != nullptr );
   if( parent != nullptr )
   {
     parent->registerChildComponent( componentName, this );
@@ -100,6 +105,29 @@ std::size_t ComponentImplementation::period() const { return mContext.period(); 
 // bool ComponentImplementation::initialised() const  { return mContext.initialised(); }
 
 SamplingFrequencyType ComponentImplementation::samplingFrequency() const { return mContext.samplingFrequency(); }
+
+Time & ComponentImplementation::time()
+{
+  return mTime;
+}
+
+Time const & ComponentImplementation::time() const
+{
+  return mTime;
+}
+
+TimeImplementation const & ComponentImplementation::
+timeImplementation() const
+{
+  return mTime.implementation();
+}
+
+TimeImplementation & ComponentImplementation::
+timeImplementation()
+{
+  return mTime.implementation();
+}
+
 
 void ComponentImplementation::setParent( CompositeComponentImplementation * parent )
 {

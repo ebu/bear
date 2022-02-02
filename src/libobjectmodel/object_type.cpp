@@ -3,6 +3,7 @@
 #include "object_type.hpp"
 
 #include <map>
+#include <stdexcept>
 #include <tuple>
 
 namespace visr

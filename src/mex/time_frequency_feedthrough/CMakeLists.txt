@@ -13,7 +13,7 @@ INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
 # <AF> Don't use export files, put export the mexFunction explicitly.
 # <AF> Consider replacing SHARED with MODULE
-add_library(${PROJECT_NAME} SHARED ${CPP_FILE_NAME} ${ADDITIONAL_CPP_FILES}  ${CMAKE_SOURCE_DIR}/cmake_modules/Matlabdef.def )
+add_library(${PROJECT_NAME} SHARED ${CPP_FILE_NAME} ${ADDITIONAL_CPP_FILES}  ${PROJECT_SOURCE_DIR}/cmake_modules/Matlabdef.def )
 
 # Add any extras dependencies
 target_link_libraries( ${PROJECT_NAME} signalflows_shared )
@@ -29,5 +29,7 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${CPP_FILE} SUFFIX 
 
 # Put directly into the mex/ subdirectory
 set_target_properties(${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/mex" )
+
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER matlab_externals )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION mex)

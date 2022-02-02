@@ -33,7 +33,7 @@ public:
    * Enumeration for how to incorporate the implementation delay of the method into the interpolation.
    * The implementation (or method) delay is the delay introduced by the fractional delay algorithm itself.
    */
-  enum class MethodDelayPolicy: char
+  enum class MethodDelayPolicy
   {
     Add, /**< Always add the implementation delay to the nominal amount of delay. */
     Limit, /**< Compensate the implementation delay, but limit to the minimum admissible delay if the nominal delay

@@ -40,6 +40,18 @@ void CommunicationProtocolFactory::registerCommunicationProtocol( CommunicationP
   }
 }
 
+void CommunicationProtocolFactory::unregisterCommunicationProtocol( CommunicationProtocolType type )
+{
+  CreatorTable & table = creatorTable();
+  auto const findIt = table.find(type);
+
+  if (findIt != table.cend())
+  {
+    table.erase(findIt);
+  }
+}
+
+
 CommunicationProtocolFactory::Creator::Creator( CreateFunction fcn, 
                                                 InputCreateFunction inputCreator,
                                                 OutputCreateFunction outputCreator,
@@ -93,7 +105,7 @@ CommunicationProtocolFactory::createProtocol( CommunicationProtocolType const & 
     = creatorTable().find( protocolType );
   if( findIt == creatorTable().end() )
   {
-    throw std::out_of_range( "CommunicationProtocolFactory: No creator function for requested parameter type " );
+    throw std::out_of_range( "CommunicationProtocolFactory: The requested protocol type has not been registered." );
   }
   // todo: Need to catch construction errors?
   return std::unique_ptr<CommunicationProtocolBase>( findIt->second.createProtocol( parameterType, config ) );
@@ -106,7 +118,7 @@ CommunicationProtocolFactory::createInput( CommunicationProtocolType const & pro
     = creatorTable().find( protocolType );
   if( findIt == creatorTable().end() )
   {
-    throw std::out_of_range( "CommunicationProtocolFactory: No creator function for requested parameter type " );
+    throw std::out_of_range( "CommunicationProtocolFactory: The requested protocol type is not registered." );
   }
   // todo: Need to catch construction errors?
   return std::unique_ptr<CommunicationProtocolBase::Input>( findIt->second.createInput() );
@@ -119,7 +131,7 @@ CommunicationProtocolFactory::createOutput( CommunicationProtocolType const & pr
     = creatorTable().find( protocolType );
   if( findIt == creatorTable().end() )
   {
-    throw std::out_of_range( "CommunicationProtocolFactory: No creator function for requested parameter type " );
+    throw std::out_of_range( "CommunicationProtocolFactory: The requested protocol type is not registered." );
   }
   // todo: Need to catch construction errors?
   return std::unique_ptr<CommunicationProtocolBase::Output>( findIt->second.createOutput() );

@@ -36,19 +36,19 @@ TimeFrequencyParameter<ElementType>::TimeFrequencyParameter( ParameterConfigBase
 
 template< typename ElementType >
 TimeFrequencyParameter<ElementType>::TimeFrequencyParameter( TimeFrequencyParameterConfig const & config )
-  : mData( config.numberOfChannels() * config.numberOfDftSamples(), config.dftSize(), cVectorAlignmentSamples )
+  : mData( config.numberOfFrames() * config.numberOfChannels(), config.numberOfDftBins(), cVectorAlignmentSamples )
   , mNumberOfChannels( config.numberOfChannels() )
 {
 
 }
 
 template< typename ElementType >
-TimeFrequencyParameter<ElementType>::TimeFrequencyParameter( std::size_t dftSize,
-                                                             std::size_t numDftSamples,
-                                                             std::size_t numChannels,
+TimeFrequencyParameter<ElementType>::TimeFrequencyParameter( std::size_t numberOfDftBins,
+                                                             std::size_t numberOfChannels,
+                                                             std::size_t numberOfFrames,
                                                              size_t alignment /*= 0*/ )
- : mData( numDftSamples * numChannels, dftSize, alignment )
- , mNumberOfChannels( numChannels )
+ : mData( numberOfFrames * numberOfChannels, numberOfDftBins, alignment )
+ , mNumberOfChannels( numberOfChannels )
 {
   // Zero-initialise
   mData.zeroFill();
@@ -81,11 +81,11 @@ TimeFrequencyParameter<ElementType>::operator=( TimeFrequencyParameter<ElementTy
 
 template< typename ElementType >
 void TimeFrequencyParameter<ElementType>::
-resize( std::size_t dftSize, std::size_t numDftSamples, std::size_t numChannels )
+resize( std::size_t numberOfDftBins, std::size_t numberOfChannels, std::size_t numberOfFrames )
 {
-  mData.resize( numDftSamples * numChannels, dftSize );
+  mData.resize( numberOfFrames * numberOfChannels, numberOfDftBins );
   mData.zeroFill();
-  mNumberOfChannels = numChannels;
+  mNumberOfChannels = numberOfChannels;
 }
 
 // Explicit instantiations for sample types float and double

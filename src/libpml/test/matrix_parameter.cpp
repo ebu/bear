@@ -23,6 +23,7 @@ namespace pml
 namespace test
 {
 
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
 BOOST_AUTO_TEST_CASE( readFiltersFromWavFile )
 {
   using SampleType = float;
@@ -52,6 +53,7 @@ BOOST_AUTO_TEST_CASE( readComplexMatrixFromWavFile )
   BOOST_CHECK( impulses.numberOfRows() == 32 );
   BOOST_CHECK( impulses.numberOfColumns() == 63 );
 }
+#endif
 
 BOOST_AUTO_TEST_CASE( readFiltersFromTextFile )
 {

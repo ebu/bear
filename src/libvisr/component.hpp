@@ -21,6 +21,7 @@ class AudioPortBase;
 class CompositeComponent;
 class ParameterPortBase;
 class SignalFlowContext;
+class Time;
 
 namespace impl
 {
@@ -176,6 +177,14 @@ public:
    */
   bool isTopLevel() const;
 
+  /**
+   * Return a reference to the time (i.e., clock) interface.
+   * @note At the moment, only const access is supported.
+   * @todo Consider whether components should have access to modifying operations, and
+   * in this add a non-const access function.
+   */
+  Time const & time() const;
+    
   /**
    * Provide a pointer to an external implementation object.
    * The type of this implementation object is opaque, i.e., not visible from the public VISR API.

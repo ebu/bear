@@ -34,21 +34,25 @@ public:
    * @param context Configuration object containing basic execution parameters.
    * @param name The name of the component. Must be unique within the containing composite component (if there is one).
    * @param parent Pointer to a containing component if there is one. Specify \p nullptr in case of a top-level component.
-   * @param offsetKinect Offset position of the acquisition device (specific geometry assumptions for the Kinect
-   * @param qw W component of the quaternion describing the coordinate system rotation into the renderer's system
-   * @param qx X component of the quaternion describing the coordinate system rotation into the renderer's system
-   * @param qy Y component of the quaternion describing the coordinate system rotation into the renderer's system
-   * @param qz Z component of the quaternion describing the coordinate system rotation into the renderer's system
-   * @todo Provide a general implementation for transforming the coordinate system.
+   * @param positionOffset Offset position of the tracking coordinate system relative to the reference corrdinate system.
+   * Optional parameter, defaults to (0,0,0).
+   * @param orientationRotation Orientation of the tracking coordinate system relative to the reference (renderer) coordinate system.
+   * The quaternion describes the rotation from the reference to the tracking coordinate system.
    */
   explicit PositionDecoder( SignalFlowContext const & context,
                             char const * name,
                             CompositeComponent * parent,
-                            panning::XYZ const &offsetKinect,
-                            float qw = 1.0f,
-                            float qx = 0.0f,
-                            float qy = 0.0f,
-                            float qz = 0.0f);
+                            pml::ListenerPosition::PositionType const & positionOffset
+                              = pml::ListenerPosition::PositionType(),
+                            pml::ListenerPosition::OrientationQuaternion const & orientationRotation
+                              = pml::ListenerPosition::OrientationQuaternion{1.0f, 0.0f, 0.0f, 0.0f} );
+
+  explicit PositionDecoder( SignalFlowContext const & context,
+                            char const * name,
+                            CompositeComponent * parent,
+                            pml:: ListenerPosition::PositionType const & positionOffset,
+                            pml:: ListenerPosition::OrientationYPR const & orientationRotation );
+
   /**
    * Disabled (deleted) copy constructor
    */
@@ -66,17 +70,20 @@ public:
   void process() override;
 
 private:
-
-
-  float mQw;
-  float mQx, mQy, mQz;// for the Quaternion 
-  panning::XYZ mOffsetKinect;
-
-
   pml::ListenerPosition translatePosition(const pml::ListenerPosition &pos);
 
   ParameterInput< pml::MessageQueueProtocol, pml::StringParameter > mDatagramInput;
   ParameterOutput< pml::DoubleBufferingProtocol, pml::ListenerPosition > mPositionOutput;
+
+  /**
+   * Offset position of the tracking coordinate system relative to the reference coordinate system.
+   */
+  pml::ListenerPosition::PositionType const cOffsetPosition;
+
+  /**
+   * Rotation quaternnion describing the rotation from the reference (renderer) coordinate system to the tracker coordinate system.
+   */
+  pml::ListenerPosition::OrientationQuaternion const cOrientationRotation;
 };
 
 } // namespace rcl

@@ -46,13 +46,9 @@ public:
                             SampleType startGain, SampleType endGain ) override;
 private:
 
-  std::vector<std::ptrdiff_t> mBaseOffsets;
-
   efl::BasicVector<SampleType> mDelays;
 
   efl::BasicVector<SampleType> mGains;
-
-  efl::BasicVector<SampleType> mIntersamplePositions;
 
   efl::LagrangeCoefficientCalculator<SampleType, order, true> const mCoeffCalculator;
 

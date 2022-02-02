@@ -6,7 +6,9 @@
 #include <libvisr/parameter_factory.hpp>
 #include <libvisr/parameter_type.hpp>
 
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
 #include <sndfile.h>
+#endif
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -207,6 +209,7 @@ MatrixParameter<ElementType>::fromStream( std::istream & stream, std::size_t ali
   return result;
 }
 
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
 namespace // unnamed
 {
   /**
@@ -317,6 +320,7 @@ MatrixParameter<ElementType>::fromAudioFile( std::string const & fileName, std::
     throw; // rethrow, i.e., pass the exception to the next level.
   }
 }
+#endif
 
 template< typename ElementType >
 /*static*/ MatrixParameter<ElementType>

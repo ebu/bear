@@ -1,30 +1,30 @@
 # Copyright Institute of Sound and Vibration Research - All rights reserved
 
-
-SET( SOURCES
-# hEADER-ONLY AT THE MMENT
-)
-
-SET( HEADERS
-matrix_from_ndarray.hpp
-vector_from_ndarray.hpp
-)
-
+# This is a header-only (interface) library
 add_library( pythonbindinghelpers INTERFACE )
 
-# add_library( pythonbindinghelpers_shared SHARED ${SOURCES} ${HEADERS} )
-# set_target_properties( pythonbindinghelpers_shared PROPERTIES OUTPUT_NAME pythonbindinghelpers )
-# # Specify a specific name for the .lib stub of the DLL on Windows to avoid clashes with the static library.
-# set_target_properties( pythonbindinghelpers_shared PROPERTIES ARCHIVE_OUTPUT_NAME pythonbindinghelpers_shared )
-# target_compile_definitions( pythonbindinghelpers_shared PRIVATE -DVISR_BUILD_PYTHONBINDINGHELPERS_SHARED_LIBRARY=1 -DVISR_BUILD_PYTHONBINDINGHELPERS_LIBRARY=1)
-# target_compile_definitions( pythonbindinghelpers_shared PUBLIC -DVISR_BUILD_PYTHONBINDINGHELPERS_SHARED_LIBRARY=1)
-# set_target_properties( pythonbindinghelpers_shared PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib" )
+# Define the header files to be installed.
+SET( PUBLIC_HEADERS
+  container_access.hpp
+  ndarray_from_basic_vector.hpp
+  ndarray_from_basic_matrix.hpp
+  matrix_from_ndarray.hpp
+  vector_from_ndarray.hpp
+)
 
-# # Set public headers to be installed for the shared library target.
-# # Because the headers are the same for the static library, the headers are only
-# # installed once.
-# set_target_properties( pythonbindinghelpers_shared PROPERTIES PUBLIC_HEADER "${HEADERS}" )
+# Set the include directory for build and install interface
+target_include_directories( pythonbindinghelpers
+  INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+  $<INSTALL_INTERFACE:include/visr>
+)
 
 install( TARGETS pythonbindinghelpers
-         PUBLIC_HEADER DESTINATION include/visr/python/libpythonbindinghelpers
+         EXPORT VISR_python_externals_exports
+         COMPONENT development_files )
+
+# Install files (this need to be done separately for interface targets)
+# (see https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#interface-libraries)
+install( FILES ${PUBLIC_HEADERS}
+         DESTINATION include/visr/python/libpythonbindinghelpers
          COMPONENT development_files )

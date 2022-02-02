@@ -25,6 +25,7 @@ namespace objectmodel
 namespace test
 {
 
+
 BOOST_AUTO_TEST_CASE( InstantiateRenderer )
 {
   boost::filesystem::path const arrayConfigFile( CMAKE_SOURCE_DIR "/config/generic/bs2051-9+10+3.xml" );
@@ -47,7 +48,9 @@ BOOST_AUTO_TEST_CASE( InstantiateRenderer )
   std::size_t const numReverbObjects = 5;
   std::size_t const discreteReflectionsPerObject = 4;
   double const lateFilterLengthSeconds = 0.05;
+#if VISR_PML_USE_SNDFILE_LIBRARY
   std::string const lateDiffusionFilters( CMAKE_SOURCE_DIR "/config/filters/random_phase_allpass_64ch_512taps.wav" );
+#endif
   double const maximumDiscreteReflectionDelay = 0.23456f;
 
   std::size_t const numInputEqSections = 0;
@@ -57,8 +60,11 @@ BOOST_AUTO_TEST_CASE( InstantiateRenderer )
                << ", \"discreteReflectionsPerObject\": " << discreteReflectionsPerObject
                << ", \"lateReverbFilterLength\": " << lateFilterLengthSeconds
                << ", \"maxDiscreteReflectionDelay\": " << maximumDiscreteReflectionDelay
-               << ", \"lateReverbDecorrelationFilters\": \"" << lateDiffusionFilters
-               << "\" }";
+// If no sndfile support is available, fall back to the default-generated decorrelation filters.
+#if VISR_PML_USE_SNDFILE_LIBRARY
+               << ", \"lateReverbDecorrelationFilters\": \"" << lateDiffusionFilters << "\" "
+#endif
+               << "}";
 
   SignalFlowContext context( period, 48000 );
 

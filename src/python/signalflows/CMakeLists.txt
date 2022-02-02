@@ -40,13 +40,17 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PRO
 set_target_properties( ${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 set_target_properties( ${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_NAME "${PROJECT_NAME}_import" )
 
-target_link_libraries( ${PROJECT_NAME} PRIVATE signalflows_shared ) 
+target_link_libraries( ${PROJECT_NAME} PRIVATE signalflows_shared )
 if( ${VISR_RENDERER_PYTHON_BINDING} )
-  message( STATUS "Entering VISR_RENDERER_PYTHON_BINDING" )
   target_link_libraries( ${PROJECT_NAME} PRIVATE signalflowspython_shared ) 
-  target_compile_definitions( ${PROJECT_NAME} PRIVATE VISR_RENDERER_PYTHON_BINDING=1 ) 
+  target_compile_definitions( ${PROJECT_NAME} PRIVATE VISR_RENDERER_PYTHON_BINDING=1 )
 endif( ${VISR_RENDERER_PYTHON_BINDING} )
 
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER python_externals )
+
+# Note: We export the target to enable dependent projects to query target properties
+# such as the library location.
 install(TARGETS ${PROJECT_NAME}
+        EXPORT VISR_python_externals_exports
         DESTINATION ${PYTHON_MODULE_INSTALL_DIRECTORY}
         COMPONENT python_externals )

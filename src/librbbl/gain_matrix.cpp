@@ -5,6 +5,7 @@
 #include <libefl/vector_functions.hpp>
 
 #include <algorithm>
+#include <limits>
 
 namespace visr
 {
@@ -128,15 +129,27 @@ void GainMatrix<ElementType>::setGainsInternal( efl::BasicMatrix<ElementType> co
   else // previous transition is not yet complete.
   {
     // Set the previous gains according to the currently reached interpolation ratio.
-    // Note: The two loops could be replaced by a single vector operation or a std::transform call.
     ElementType const ratio = std::min( static_cast<ElementType>(1.0),
       static_cast<ElementType>(mInterpolationCounter * mBlockSize ) / static_cast<ElementType>(mFader.interpolationSamples() ) );
     for( std::size_t outputIdx( 0 ); outputIdx < numOutputs; ++outputIdx )
     {
       for( std::size_t inputIdx( 0 ); inputIdx < numInputs; ++inputIdx )
       {
-        // linear interpolation
-        mPreviousGains( outputIdx, inputIdx ) += ratio * (mNextGains( outputIdx, inputIdx ) - mPreviousGains( outputIdx, inputIdx ));
+        // If the difference becomes to small, set the previous value to the
+        // target value immediately.
+        // This avoids a exponential creep towards the target value, where
+        // repeated rounding might imply that the target value is not reached at
+        // all. This also avoids problems (e.g., performance reduction) due to denormalised
+        // floating-point values. 
+        ElementType const newScale{ ratio * (mNextGains( outputIdx, inputIdx ) - mPreviousGains( outputIdx, inputIdx )) };
+        if( std::abs( newScale ) >= std::numeric_limits<ElementType>::epsilon() )
+        {
+          mPreviousGains( outputIdx, inputIdx ) += newScale;
+        }
+        else
+        {
+          mPreviousGains( outputIdx, inputIdx ) = mNextGains( outputIdx, inputIdx );
+        }
       }
     }
   }

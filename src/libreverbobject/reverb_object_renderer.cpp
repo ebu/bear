@@ -15,6 +15,7 @@
 #include <librbbl/fft_wrapper_factory.hpp>
 #include <librbbl/fft_wrapper_base.hpp>
 
+#include <librcl/biquad_iir_filter.hpp>
 #include <librcl/fir_filter_matrix.hpp>
 #include <librcl/crossfading_fir_filter_matrix.hpp>
 
@@ -31,7 +32,7 @@
 
 // If active, the matrix of generated late reverb decorrelation filters is
 // written into a text file in working directory of the application.
-#define DEBUG_DECORR_FILTER_GENERATION
+// #define DEBUG_DECORR_FILTER_GENERATION
 
 #ifdef DEBUG_DECORR_FILTER_GENERATION
 #include <iterator>
@@ -82,10 +83,11 @@ namespace // unnamed
    * Create a set of random-phase allpass filters. The frequency response is unity at the frequency grid points, but the phase is unformly
    * distributed in [-pi,pi].
    * @param filters The matrix to be filled. Must be set to the desired dimensions beforehand.
+   * @param decorrelatorGain Scaling factor (linear scale) for the filter gain. 
    * @todo Consider promoting this into a general-purpose library function (rbbl or efl).
    */
   template<typename DataType>
-  void generateRandomPhaseAllpass(efl::BasicMatrix<DataType> & filters)
+  void generateRandomPhaseAllpass(efl::BasicMatrix<DataType> & filters, DataType decorrelatorGain )
   {
     std::size_t const numFilters{ filters.numberOfRows() };
     std::size_t const filterLength{ filters.numberOfColumns() };
@@ -98,14 +100,14 @@ namespace // unnamed
 
     std::unique_ptr<rbbl::FftWrapperBase<DataType> >  fft
       = rbbl::FftWrapperFactory<DataType>::create("default", filterLength, 0 /*no alignment specified*/);
-    DataType const scaleFactor{ static_cast<DataType>(1.0) / (static_cast<DataType>(filterLength) * fft->inverseScalingFactor()) };
+    DataType const scaleFactor{ decorrelatorGain / (static_cast<DataType>(filterLength) * fft->inverseScalingFactor()) };
 
     boost::random::mt19937 gen;
     boost::random::uniform_real_distribution<DataType> uniformPhaseGen{ -boost::math::constants::pi<DataType>(), boost::math::constants::pi<DataType>() };
 
 #ifdef DEBUG_DECORR_FILTER_GENERATION
     std::stringstream fileName;
-    fileName << "leta_decorrelation_filters.dat";
+    fileName << "late_decorrelation_filters.dat";
     std::ofstream out(fileName.str(), std::ios_base::out);
 #endif
 
@@ -148,7 +150,6 @@ ReverbObjectRenderer::ReverbObjectRenderer( SignalFlowContext const & context,
   , mReverbParameterCalculator( context, "parameterCalculator", this )
   , mReverbSignalRouting( context, "signalRouting", this )
   , mDiscreteReverbDelay( context, "discreteReverbDelay", this )
-  , mDiscreteReverbReflFilters( context, "discreteReverbReflectionFilters", this )
   , mDiscreteReverbPanningMatrix( context, "discretePanningMatrix", this )
   , mLateReverbFilterCalculator()
   , mLateReverbGainDelay( context, "lateReverbGainDelay", this )
@@ -197,7 +198,7 @@ ReverbObjectRenderer::ReverbObjectRenderer( SignalFlowContext const & context,
     if( lateReverbDecorrFilterName.empty() )
     {
       lateDecorrelationFilters.resize( arrayConfig.getNumRegularSpeakers(), 512 ); // default filter length
-      generateRandomPhaseAllpass( lateDecorrelationFilters );
+      generateRandomPhaseAllpass( lateDecorrelationFilters, lateReverbDecorrelatorGain );
     }
     else
     {
@@ -206,6 +207,7 @@ ReverbObjectRenderer::ReverbObjectRenderer( SignalFlowContext const & context,
       {
         throw std::invalid_argument( "The file path \"lateReverbDecorrelationFilters\" provided in the reverb configuration does not exist." );
       }
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
       pml::MatrixParameter<SampleType> const allLateDecorrelationFilters = pml::MatrixParameter<SampleType>::fromAudioFile( lateReverbDecorrFilterName, cVectorAlignmentSamples );
       std::size_t const lateDecorrelationFilterLength = allLateDecorrelationFilters.numberOfColumns();
       if( allLateDecorrelationFilters.numberOfRows() < arrayConfig.getNumRegularSpeakers() )
@@ -225,7 +227,9 @@ ReverbObjectRenderer::ReverbObjectRenderer( SignalFlowContext const & context,
           throw std::runtime_error( "Copying and scaling of late decorrelation filter rows failed." );
         }
       }
-
+#else
+      throw std::invalid_argument( "To load a late reverb decorrelation filter from an audio file, VISR must be built with the BUILD_USE_SNDFILE_LIBRARY option." );
+#endif
     }
 
     std::size_t const interpolationSteps = period();
@@ -242,7 +246,8 @@ ReverbObjectRenderer::ReverbObjectRenderer( SignalFlowContext const & context,
                                 interpolationSteps, maxDiscreteReflectionDelay, "lagrangeOrder3",
                                 rcl::DelayVector::MethodDelayPolicy::Limit,
                                 rcl::DelayVector::ControlPortConfig::All, 0.0f, 0.0f );
-    mDiscreteReverbReflFilters.setup( maxNumReverbObjects*numDiscreteReflectionsPerObject, numWallReflBiquads, true /*controlInputs*/ );
+    mDiscreteReverbReflFilters.reset( new rcl::BiquadIirFilter( context, "discreteReverbReflectionFilters", this,
+                                      maxNumReverbObjects*numDiscreteReflectionsPerObject, numWallReflBiquads, true /*controlInputs*/ ) );
     mDiscreteReverbPanningMatrix.setup( maxNumReverbObjects*numDiscreteReflectionsPerObject,
                                         arrayConfig.getNumRegularSpeakers(),
                                         interpolationSteps );
@@ -310,8 +315,8 @@ ReverbObjectRenderer::ReverbObjectRenderer( SignalFlowContext const & context,
   }
   audioConnection( mReverbSignalRouting.audioPort("out"), ChannelList(discreteFanOut),
                    mDiscreteReverbDelay.audioPort("in"), ChannelRange(0,totalDiscreteReflections) );
-  audioConnection( mDiscreteReverbDelay.audioPort("out"), mDiscreteReverbReflFilters.audioPort("in") );
-  audioConnection( mDiscreteReverbReflFilters.audioPort("out"), mDiscreteReverbPanningMatrix.audioPort("in") );
+  audioConnection( mDiscreteReverbDelay.audioPort("out"), mDiscreteReverbReflFilters->audioPort("in") );
+  audioConnection( mDiscreteReverbReflFilters->audioPort("out"), mDiscreteReverbPanningMatrix.audioPort("in") );
   audioConnection( mDiscreteReverbPanningMatrix.audioPort("out"), mReverbMix.audioPort("in0") );
 
   audioConnection( mReverbSignalRouting.audioPort("out"), mLateReverbGainDelay.audioPort("in") );
@@ -325,7 +330,7 @@ ReverbObjectRenderer::ReverbObjectRenderer( SignalFlowContext const & context,
   parameterConnection( mReverbParameterCalculator.parameterPort("signalRoutingOut"), mReverbSignalRouting.parameterPort("controlInput") );
   parameterConnection( mReverbParameterCalculator.parameterPort("discreteGainOut"), mDiscreteReverbDelay.parameterPort( "gainInput" ) );
   parameterConnection( mReverbParameterCalculator.parameterPort("discreteDelayOut"), mDiscreteReverbDelay.parameterPort( "delayInput" ) );
-  parameterConnection( mReverbParameterCalculator.parameterPort("discreteEqOut"), mDiscreteReverbReflFilters.parameterPort( "eqInput" ) );
+  parameterConnection( mReverbParameterCalculator.parameterPort("discreteEqOut"), mDiscreteReverbReflFilters->parameterPort( "eqInput" ) );
   parameterConnection( mReverbParameterCalculator.parameterPort("discretePanningGainOut"), mDiscreteReverbPanningMatrix.parameterPort( "gainInput" ) );
   parameterConnection( mReverbParameterCalculator.parameterPort("lateGainOut"), mLateReverbGainDelay.parameterPort( "gainInput" ) );
   parameterConnection( mReverbParameterCalculator.parameterPort("lateDelayOut"), mLateReverbGainDelay.parameterPort( "delayInput" ) );

@@ -18,13 +18,7 @@ namespace python
 namespace panning
 {
 
-namespace
-{
-  void calcGainsInternal( VBAP const & vbap, SampleType x, SampleType y, SampleType z, pybind11::array_t<SampleType> & gains )
-  {
-    vbap.calculateGains( x,y,z, static_cast<SampleType*>(gains.request().ptr) );
-  }
-}
+namespace py = pybind11;
 
 void exportVBAP(pybind11::module & m)
 {
@@ -33,7 +27,15 @@ void exportVBAP(pybind11::module & m)
          pybind11::arg("listenerPosX")=0.0,
          pybind11::arg("listenerPosY")=0.0,
          pybind11::arg("listenerPosZ")=0.0)
-    .def("calculateGains", &calcGainsInternal )
+    .def( "calculateGains",
+          [](VBAP const & self, SampleType x, SampleType y, SampleType z, pybind11::array_t<SampleType> & gains, bool planeWave)
+          { self.calculateGains(x, y, z, static_cast<SampleType*>(gains.request().ptr), planeWave); },
+          py::arg("x"), py::arg("y"), py::arg("z"), py::arg("gains"), py::arg("planeWave") = false)
+    .def( "calculateGainsUnNormalised",
+          []( VBAP const & self, SampleType x , SampleType y, SampleType z, pybind11::array_t<SampleType> & gains, bool planeWave )
+          { self.calculateGainsUnNormalised( x, y, z, static_cast<SampleType*>(gains.request().ptr), planeWave ); },
+          py::arg("x"), py::arg("y"), py::arg("z"), py::arg("gains"), py::arg("planeWave")=false )
+    .def("setListenerPosition", &VBAP::setListenerPosition, py::arg("x"), py::arg("y"), py::arg("z") )
     ;
 }
 

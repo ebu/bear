@@ -246,7 +246,7 @@ namespace // unnamed
             // This is done because PortAudio sometimes truncates its device names.
             if (std::strncmp(name.c_str(), info->name, std::strlen(info->name) ) == 0)
             {
-              deviceIdx = idx;
+              deviceIdx = globalIdx;
               break;
             }
           }
@@ -256,16 +256,47 @@ namespace // unnamed
       {
         // We list all devices that have at least 1 channel in the specified direction (minChannels=1)
         std::string const deviceNames = listDeviceNames(hostApiIndex, isInput, 1 /*minChannels*/);
-        throw std::invalid_argument(detail::composeMessageString("PortAudioInterface: ", isInput ? "Input" : "Output", " device with name \"",
-          name, "\" not found. Admissible devices are: ", deviceNames));
+        std::stringstream errMsg;
+        errMsg << "PortAudioInterface: ";
+        if( useDefault )
+        {
+          errMsg << "Default " << (isInput ? "input" : "output");
+        }
+        else
+        {
+          errMsg << (isInput ? "Input" : "Output")
+                 << " device named \"" << name << "\"";
+        }
+        PaHostApiInfo const * hostApiInfo = Pa_GetHostApiInfo(hostApiIndex);
+        errMsg << " not found for host API \"" << hostApiInfo->name << "\".\n";
+        if( deviceNames.empty() )
+        {
+          errMsg << " No admissible devices found.";
+        }
+        else
+        {
+          errMsg << " Admissible devices are: " << deviceNames;
+        }
+        throw std::invalid_argument( errMsg.str() );
       }
       PaDeviceInfo const * deviceInfo = Pa_GetDeviceInfo(deviceIdx);
       std::size_t const numChannels = isInput ? deviceInfo->maxInputChannels : deviceInfo->maxOutputChannels;
       if (numChannels < minChannels)
       {
-        throw std::runtime_error(detail::composeMessageString("PortAudio device \"", deviceInfo->name,
-          useDefault ? " (default) " : "",
-          "\" has too few ", isInput ? "input" : "output", " channels (", numChannels, ")."));
+        std::stringstream errMsg;
+        errMsg << "PortAudioInterface: PortAudio ";
+        if( useDefault )
+        {
+          errMsg << "default ";
+        }
+        errMsg << (isInput ? "input" : "output") << "device ";
+        if( not useDefault )
+        {
+          errMsg << "\"" << name << "\" ";
+        }
+        errMsg << " has too few " << (isInput ? "input" : "output")
+               << " channels (" << numChannels << ", required: " << minChannels << ").";
+        throw std::runtime_error( errMsg.str() );
       }
       return deviceIdx;
     }
@@ -358,12 +389,11 @@ namespace // unnamed
     outputParameters.sampleFormat = cPaSampleFormat;
     outputParameters.suggestedLatency = Pa_GetDeviceInfo( outDeviceIdx )->defaultLowInputLatency;
     outputParameters.hostApiSpecificStreamInfo = nullptr;
-    
     ret = Pa_IsFormatSupported( &inputParameters, &outputParameters,
                                static_cast<double>(mSampleRate) );
     if( ret != paFormatIsSupported )
     {
-      throw std::invalid_argument( std::string("The chosen stream format is is not supported by the portaudio interface: ") + Pa_GetErrorText( ret ) );
+      throw std::invalid_argument( std::string("The chosen stream format is not supported by the portaudio interface: ") + Pa_GetErrorText( ret ) );
     }
     ret = Pa_OpenStream( &mStream,
                         &inputParameters,

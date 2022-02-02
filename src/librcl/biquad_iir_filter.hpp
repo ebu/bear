@@ -1,4 +1,4 @@
-/* Copyright Institute of Sound and Vibration Research - All rights reserved */
+/* Copyright 2019 AudioScenic - All rights reserved */
 
 #ifndef VISR_LIBRCL_BIQUAD_IIR_FILTER_HPP_INCLUDED
 #define VISR_LIBRCL_BIQUAD_IIR_FILTER_HPP_INCLUDED
@@ -17,63 +17,44 @@
 #include <libpml/biquad_parameter.hpp>
 #include <libpml/double_buffering_protocol.hpp>
 
-#include <cstddef> // for std::size_t
+#include <librbbl/biquad_coefficient.hpp>
+
+#include <cstddef>
 #include <memory>
-#include <valarray>
 
 namespace visr
 {
-
-// Forward declarationa
-namespace rbbl
+namespace rcl
 {
-template< typename CoefficientType>
-class BiquadCoefficient;
-template< typename CoefficientType>
-class BiquadCoefficientList;
-template< typename CoefficientType>
-class BiquadCoefficientMatrix;
-}
-
-namespace rcl 
-{
-
 /**
- * A multichannel IIR filter consisting of a fixed, arbitrary number of biquads per channel.
- * This class has one input port named "in" and one output port named "out".
- * The widths of the input and the output port are identical and is
+ * A multichannel IIR filter consisting of a fixed, arbitrary number of biquads
+ * per channel. This class has one input port named "in" and one output port
+ * named "out". The widths of the input and the output port are identical and is
  * set by the argument <b>numberOfChannels</b> in the setup() method.
  */
-class VISR_RCL_LIBRARY_SYMBOL BiquadIirFilter: public AtomicComponent
+class VISR_RCL_LIBRARY_SYMBOL BiquadIirFilter: public visr::AtomicComponent
 {
   using SampleType = visr::SampleType;
-public:
-  /**
-   * Constructor that yields a basic, uninitialised object. 
-   * A setup() method must be called before the component can be used for rendering.
-   * @param context Configuration object containing basic execution parameters.
-   * @param name The name of the component. Must be unique within the containing composite component (if there is one).
-   * @param parent Pointer to a containing component if there is one. Specify \p nullptr in case of a top-level component.
-   */
-  explicit BiquadIirFilter( SignalFlowContext const & context,
-                            char const * name,
-                            CompositeComponent * parent = nullptr  );
 
+public:
   /**
    * Constructor that yields a fully initialised object.
    * It is not needed to call a setup() afterwards.
    * This overload sets all EQs to a flat response.
    * @param context Configuration object containing basic execution parameters.
-   * @param name The name of the component. Must be unique within the containing composite component (if there is one).
-   * @param parent Pointer to a containing component if there is one. Specify \p nullptr in case of a top-level component.
+   * @param name The name of the component. Must be unique within the containing
+   * composite component (if there is one).
+   * @param parent Pointer to a containing component if there is one. Specify \p
+   * nullptr in case of a top-level component.
    * @param numberOfChannels The number of single audio waveforms in
    * the multichannel input and output waveforms. .
    * @param numberOfBiquads The number of biquads per audio channel.
-   * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
+   * @param controlInput Flag whether to instantiate a parameter port for
+   * receiving filter update commands.
    */
-  explicit BiquadIirFilter( SignalFlowContext const & context,
+  explicit BiquadIirFilter( visr::SignalFlowContext const & context,
                             char const * name,
-                            CompositeComponent * parent,
+                            visr::CompositeComponent * parent,
                             std::size_t numberOfChannels,
                             std::size_t numberOfBiquads,
                             bool controlInput = false );
@@ -83,248 +64,219 @@ public:
    * It is not needed to call a setup() afterwards.
    * This overload sets all biquad sections to the same initial value.
    * @param context Configuration object containing basic execution parameters.
-   * @param name The name of the component. Must be unique within the containing composite component (if there is one).
-   * @param parent Pointer to a containing component if there is one. Specify \p nullptr in case of a top-level component.
+   * @param name The name of the component. Must be unique within the containing
+   * composite component (if there is one).
+   * @param parent Pointer to a containing component if there is one. Specify \p
+   * nullptr in case of a top-level component.
    * @param numberOfChannels The number of single audio waveforms in
    * the multichannel input and output waveforms. .
    * @param numberOfBiquads The number of biquads per audio channel.
-   * @param initialBiquad The initial setting for the filter characteristics. All biquads in all channels are set
-   * to this coefficient set. The default is a flat, direct-feedthrough filter
-   * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
+   * @param initialBiquad The initial setting for the filter characteristics.
+   * All biquads in all channels are set to this coefficient set. The default is
+   * a flat, direct-feedthrough filter
+   * @param controlInput Flag whether to instantiate a parameter port for
+   * receiving filter update commands.
    */
-  explicit BiquadIirFilter( SignalFlowContext const & context,
-                            char const * name,
-                            CompositeComponent * parent,
-                            std::size_t numberOfChannels,
-                            std::size_t numberOfBiquads,
-                            rbbl::BiquadCoefficient<SampleType> const & initialBiquad,
-                            bool controlInput = false );
+  explicit BiquadIirFilter(
+      visr::SignalFlowContext const & context,
+      char const * name,
+      visr::CompositeComponent * parent,
+      std::size_t numberOfChannels,
+      std::size_t numberOfBiquads,
+      visr::rbbl::BiquadCoefficient< SampleType > const & initialBiquad,
+      bool controlInput = false );
 
   /**
    * Constructor that yields a fully initialised object.
    * It is not needed to call a setup() afterwards.
    * This overload sets each channel to the same sequence of biquad sections.
    * @param context Configuration object containing basic execution parameters.
-   * @param name The name of the component. Must be unique within the containing composite component (if there is one).
-   * @param parent Pointer to a containing component if there is one. Specify \p nullptr in case of a top-level component.
+   * @param name The name of the component. Must be unique within the containing
+   * composite component (if there is one).
+   * @param parent Pointer to a containing component if there is one. Specify \p
+   * nullptr in case of a top-level component.
    * @param numberOfChannels The number of signals in the input signal.
    * @param numberOfBiquads The number of biquad sections for each channel.
-   * @param coeffs The initial biquad coefficients, which are set identically for all channels.
-   * The number of biquad coefficient sets in this parameter must equal the \p numberOfBiquads parameter.
-   * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
+   * @param coeffs The initial biquad coefficients, which are set identically
+   * for all channels. The number of biquad coefficient sets in this parameter
+   * must equal the \p numberOfBiquads parameter.
+   * @param controlInput Flag whether to instantiate a parameter port for
+   * receiving filter update commands.
    */
-  explicit BiquadIirFilter( SignalFlowContext const & context,
-                            char const * name,
-                            CompositeComponent * parent,
-                            std::size_t numberOfChannels,
-                            std::size_t numberOfBiquads,
-                            rbbl::BiquadCoefficientList< SampleType > const & coeffs,
-                            bool controlInput = false );
+  explicit BiquadIirFilter(
+      visr::SignalFlowContext const & context,
+      char const * name,
+      visr::CompositeComponent * parent,
+      std::size_t numberOfChannels,
+      std::size_t numberOfBiquads,
+      visr::rbbl::BiquadCoefficientList< SampleType > const & coeffs,
+      bool controlInput = false );
 
   /**
-  * Constructor that yields a fully initialised object.
-  * It is not needed to call a setup() afterwards.
-  * This overload accepts a matrix of biquad filters to specifically initialise every biquad section for each channel.
-  * @param context Configuration object containing basic execution parameters.
-  * @param name The name of the component. Must be unique within the containing composite component (if there is one).
-  * @param parent Pointer to a containing component if there is one. Specify \p nullptr in case of a top-level component.
-  * Setup method to initialise the object and set the biquad filters individually for each filter channel and biquad section.
-  * @param numberOfChannels The number of signals in the input signal.
-  * @param numberOfBiquads The number of biquad sections for each channel.
-  * @param coeffs The initial biquad coefficients as a matrix of size \p numberOfChannels x \p numberOfBiquads
-  * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
-  */
-  explicit BiquadIirFilter( SignalFlowContext const & context,
-                            char const * name,
-                             CompositeComponent * parent,
-                             std::size_t numberOfChannels,
-                             std::size_t numberOfBiquads,
-                             rbbl::BiquadCoefficientMatrix< SampleType > const & coeffs,
-                             bool controlInput = false );
-
-
-  /**
-   * Setup method to initialise the object and set all eq parameters to a default (flat) response.
-   * @param numberOfChannels The number of single audio waveforms in
-   * the multichannel input and output waveforms. .
-   * @param numberOfBiquads The number of biquads per audio channel.
-   * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
+   * Constructor that yields a fully initialised object.
+   * It is not needed to call a setup() afterwards.
+   * This overload accepts a matrix of biquad filters to specifically initialise
+   * every biquad section for each channel.
+   * @param context Configuration object containing basic execution parameters.
+   * @param name The name of the component. Must be unique within the containing
+   * composite component (if there is one).
+   * @param parent Pointer to a containing component if there is one. Specify \p
+   * nullptr in case of a top-level component. Setup method to initialise the
+   * object and set the biquad filters individually for each filter channel and
+   * biquad section.
+   * @param numberOfChannels The number of signals in the input signal.
+   * @param numberOfBiquads The number of biquad sections for each channel.
+   * @param coeffs The initial biquad coefficients as a matrix of size \p
+   * numberOfChannels x \p numberOfBiquads
+   * @param controlInput Flag whether to instantiate a parameter port for
+   * receiving filter update commands.
    */
-  void setup( std::size_t numberOfChannels,
-              std::size_t numberOfBiquads,
-              bool controlInput = false );
-
-  /**
-   * Setup method to initialise the object and set the parameters.
-   * @param numberOfChannels The number of single audio waveforms in
-   * the multichannel input and output waveforms. .
-   * @param numberOfBiquads The number of biquads per audio channel.
-   * @param initialBiquad The initial setting for the filter characteristics. All biquads in all channels are set 
-   * to this coefficient set. The default is a flat, direct-feedthrough filter
-   * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
-   */
-  void setup( std::size_t numberOfChannels,
-              std::size_t numberOfBiquads,
-              rbbl::BiquadCoefficient<SampleType> const & initialBiquad,
-              bool controlInput = false );
-
-  /**
-  * Setup method to initialise the object and set the parameters.
-  * @param numberOfChannels The number of signals in the input signal.
-  * @param numberOfBiquads The number of biquad sections for each channel.
-  * @param coeffs The initial biquad coefficients, which are set identically for all channels.
-  * The number of biquad coefficient sets in this parameter must equal the \p numberOfBiquads parameter.
-  * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
-  */
-  void setup( std::size_t numberOfChannels,
-              std::size_t numberOfBiquads,
-              rbbl::BiquadCoefficientList< SampleType > const & coeffs,
-              bool controlInput = false );
-
-  /**
-  * Setup method to initialise the object and set the biquad filters individually for each filter channel and biquad section.
-  * @param numberOfChannels The number of signals in the input signal.
-  * @param numberOfBiquads The number of biquad sections for each channel.
-  * @param coeffs The initial biquad coefficients as a matrix of size \p numberOfChannels x \p numberOfBiquads
-  * @param controlInput Flag whether to instantiate a parameter port for receiving filter update commands.
-  */
-  void setup( std::size_t numberOfChannels,
-              std::size_t numberOfBiquads,
-              rbbl::BiquadCoefficientMatrix< SampleType > const & coeffs,
-              bool controlInput = false );
+  explicit BiquadIirFilter(
+      visr::SignalFlowContext const & context,
+      char const * name,
+      visr::CompositeComponent * parent,
+      std::size_t numberOfChannels,
+      std::size_t numberOfBiquads,
+      visr::rbbl::BiquadCoefficientMatrix< SampleType > const & coeffs,
+      bool controlInput = false );
 
   /**
    * The process method applies the IIR filters to the audio channels.
    * values to the stream of input samples.
    */
-  void process( );
+  void process() override;
 
   /**
    * Support for runtime changes of the filter coefficients.
-   * @note At the moment, the coefficients are appplied instantaneously, with not precautions against transients or potential instabilities.
+   * @note At the moment, the coefficients are appplied instantaneously, with
+   * not precautions against transients or potential instabilities.
    */
   //@{
   /**
-   * Set the IIR biquad coefficients for a specific biquad section of a becific filter channel.
+   * Set the IIR biquad coefficients for a specific biquad section of a becific
+   * filter channel.
    * @param channelIndex The index of the filter channel.
    * @param biquadIndex The index of the biquad section to be set.
    * @param coeffs The set of biquad IIR coefficients.
-   * @throw std::out_of_range If \p channelIndex exceeds the number of filter channels.
-   * @throw std::out_of_range If \p biquadIndex exceeds the number of biquad sections of this component.
+   * @throw std::out_of_range If \p channelIndex exceeds the number of filter
+   * channels.
+   * @throw std::out_of_range If \p biquadIndex exceeds the number of biquad
+   * sections of this component.
    */
-  void setCoefficients( std::size_t channelIndex, std::size_t biquadIndex,
-                        rbbl::BiquadCoefficient< SampleType > const & coeffs );
+  void setCoefficients(
+      std::size_t channelIndex,
+      std::size_t biquadIndex,
+      visr::rbbl::BiquadCoefficient< SampleType > const & coeffs );
 
   /**
-  * Set the biquad coefficients for a filter channel.
-  * @param channelIndex The index of the filter channel.
-  * @param coeffs The biquad coefficients. The number of sections must match the configured number of biquads of the component.
-  * @throw std::out_of_range If \p channelIndex exceeds the number of filter channels.
-  * @throw std::invalid_argument If the number of biquads in \p coeffs does not match the number of biquad sections in this component.
-  */
-  void setChannelCoefficients( std::size_t channelIndex,
-                               rbbl::BiquadCoefficientList< SampleType > const & coeffs );
+   * Set the biquad coefficients for a filter channel.
+   * @param channelIndex The index of the filter channel.
+   * @param coeffs The biquad coefficients. The number of sections must match
+   * the configured number of biquads of the component.
+   * @throw std::out_of_range If \p channelIndex exceeds the number of filter
+   * channels.
+   * @throw std::invalid_argument If the number of biquads in \p coeffs does not
+   * match the number of biquad sections in this component.
+   */
+  void setChannelCoefficients(
+      std::size_t channelIndex,
+      visr::rbbl::BiquadCoefficientList< SampleType > const & coeffs );
 
   /**
-  * Set the biquad coefficients for a filter channel.
-  * @param coeffs The matrix of biquad coefficients, dimension \p numberOfChannels x \p numberOfBiquadSections
-  * @throw std::invalid_argument If the matrix dimension differs from \p numberOfChannels x \p numberOfBiquadSections
-  */
-  void setCoefficientMatrix( rbbl::BiquadCoefficientMatrix< SampleType > const & coeffs );
+   * Set the biquad coefficients for a filter channel.
+   * @param coeffs The matrix of biquad coefficients, dimension \p
+   * numberOfChannels x \p numberOfBiquadSections
+   * @throw std::invalid_argument If the matrix dimension differs from \p
+   * numberOfChannels x \p numberOfBiquadSections
+   */
+  void setCoefficientMatrix(
+      visr::rbbl::BiquadCoefficientMatrix< SampleType > const & coeffs );
 
   //@}
 private:
-  /**
-   * Internal method to allocate and initialise the data members.
-   * Contains the code common to all constructors.
-   */
-  void setupDataMembers( std::size_t numberOfChannels,
-                         std::size_t numberOfBiquads,
-                         bool controlInput );
-
   /**
    * Internal method to set a single biquad section.
    * No range checks.
    * @see setCoefficients
    */
-  void setCoefficientsInternal( std::size_t channelIndex, std::size_t biquadIndex,
-                                rbbl::BiquadCoefficient< SampleType > const & coeffs );
+  void setCoefficientsInternal(
+      std::size_t channelIndex,
+      std::size_t biquadIndex,
+      visr::rbbl::BiquadCoefficient< SampleType > const & coeffs );
 
   /**
    * Internal method to set the biquad coefficients for a filter channel.
    * No range checks performed.
    * @param channelIndex The index of the filter channel.
-   * @param coeffs The biquad coefficients. The number of sections must match the configured number of biquads of the component.
+   * @param coeffs The biquad coefficients. The number of sections must match
+   * the configured number of biquads of the component.
    * @see setChannelCoefficients
    */
-  void setChannelCoefficientsInternal( std::size_t channelIndex,
-                                       rbbl::BiquadCoefficientList< SampleType > const & coeffs );
+  void setChannelCoefficientsInternal(
+      std::size_t channelIndex,
+      visr::rbbl::BiquadCoefficientList< SampleType > const & coeffs );
 
   /**
-  * Internal method to set the complete coefficient matrix.
-  * No range checks performed.
-  * @see setCoefficientMatrix
-  */
-  void setCoefficientMatrixInternal( rbbl::BiquadCoefficientMatrix< SampleType > const & coeffs );
+   * Internal method to set the complete coefficient matrix.
+   * No range checks performed.
+   * @see setCoefficientMatrix
+   */
+  void setCoefficientMatrixInternal(
+      visr::rbbl::BiquadCoefficientMatrix< SampleType > const & coeffs );
 
   /**
    * The audio input port for this component.
    */
-  AudioInput mInput;
+  visr::AudioInput mInput;
 
   /**
    * The audio output port for this component.
    */
-  AudioOutput mOutput;
+  visr::AudioOutput mOutput;
 
-  std::unique_ptr<ParameterInput<pml::DoubleBufferingProtocol, pml::BiquadParameterMatrix<SampleType> > > mEqInput;
+  std::unique_ptr<
+      visr::ParameterInput< visr::pml::DoubleBufferingProtocol,
+                            visr::pml::BiquadParameterMatrix< SampleType > > >
+      mEqInput;
 
   /**
    * The number of simultaneous audio channels.
    */
-  std::size_t mNumberOfChannels;
+  std::size_t const cNumberOfChannels;
 
   /**
    * The number of biquads per channel.
    */
-  std::size_t mNumberOfBiquadSections;
+  std::size_t const cNumberOfBiquadSections;
 
   /**
    * Matrix to store the IIR coefficients.
    * Each column contains the coefficients for one output channel.
-   * The five coefficients for one biquad section are stored in five consecutive columns.
-   * Thus, the coefficients \p b0, \p b1, \p b2, \p a1 and \p a2 of biquad section \p N are stored in the 
-   * columns \p 5N...5N+4.
-   * The dimension of the matrix is \p numberOfBiquadSections*5 x \p numberOfChannels .
+   * The five coefficients for one biquad section are stored in five consecutive
+   * columns. Thus, the coefficients \p b0, \p b1, \p b2, \p a1 and \p a2 of
+   * biquad section \p N are stored in the rows \p
+   * cBiquadCoefficientsStride*N... \p cBiquadCoefficientsStride*N+4. The
+   * dimension of the matrix is \p numberOfChannels x \p numberOfBiquadSections*
+   * cBiquadCoefficientStride .
    */
-  efl::BasicMatrix<SampleType> mCoefficients;
+  visr::efl::BasicMatrix< SampleType > mCoefficients;
 
   /**
-  * Matrix structure to hold the state (i.e., past outputs of the recursive part of the filter \p w[n-1] and \p w[n-2].
-  * Each row contains one state variable for each channel, i.e., each column contains the complete state for one channel.
-  * The states for the biquad sections are stored in the columns, i.e, column 0 and 1 contain the states \p w[n-2] and \p w[n-1] of biquad 0,
-  * and columns \p 2N and \p 2N+1 contain \p w[n-2] and \p w[n-1] of biquad section \p N, respectively.
-  * The dimension of the matrix is 2*mNumberOfBiquadSections x numberOfChannels;
-  */
-  efl::BasicMatrix<SampleType> mState;
-
-  /**
-   * Internally used data arrays for intermediate results.
+   * Matrix structure to hold the state (i.e., past outputs of the recursive
+   * part of the filter \p w[n-1] and \p w[n-2]. Each row contains contains the
+   * state for one channel, with 2 state variables per biquad section The
+   * dimension of the matrix is \p numberOfChannels x \p cBiquadStateStride * \p
+   * mNumberOfBiquadSections.
    */
-  //@{
-  efl::BasicVector<SampleType> mCurrentInput;
-  efl::BasicVector<SampleType> mCurrentOutput;
-  //@}
+  visr::efl::BasicMatrix< SampleType > mState;
 
-  /**
-   * Temporary storage to hold the pointers of all input channels.
-   * This is sensible at the moment as the data is processed sample-wise, which makes repeated index access costly.
-   * @todo Consider change to a stride-based access to the input port data.
-   */
-  std::valarray<SampleType const * > mInputChannels;
+  static constexpr std::size_t cBiquadCoefficientsStride =
+      visr::rbbl::BiquadCoefficient< SampleType >::cNumberOfCoeffs;
+
+  static constexpr std::size_t cBiquadStateStride = 2;
 };
 
 } // namespace rcl
 } // namespace visr
-  
+
 #endif // #ifndef VISR_LIBRCL_BIQUAD_IIR_FILTER_HPP_INCLUDED

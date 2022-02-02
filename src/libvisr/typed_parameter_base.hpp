@@ -72,7 +72,7 @@ public:
     {
       throw std::invalid_argument( "Assign: Types are not compatible.");
     }
-    *this = *rhsTyped;
+    static_cast<ConcreteParameterType&>(*this).operator=( *rhsTyped );
   }
 };
 

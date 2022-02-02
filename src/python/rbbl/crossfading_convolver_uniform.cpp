@@ -108,7 +108,8 @@ void exportCrossfadingConvolverUniform( pybind11::module & m, char const * name 
     .def( "clearFilters", &CrossfadingConvolverUniform<ElementType>::clearFilters )
     .def( "initFilters", &CrossfadingConvolverUniform<ElementType>::initFilters, pybind11::arg( "newFilters" ) )
     .def( "setImpulseResponse", &CrossfadingConvolverUniform<ElementType>::setImpulseResponse,
-      pybind11::arg("ir"), pybind11::arg( "filterLength"), pybind11::arg( "filterIdx" ), pybind11::arg( "alignment" ) = 0 )
+      pybind11::arg("ir"), pybind11::arg( "filterLength"), pybind11::arg( "filterIdx" ),
+      pybind11::arg( "startTransition" ), pybind11::arg( "alignment" ) = 0 )
   ;
 }
 

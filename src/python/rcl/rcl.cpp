@@ -27,6 +27,8 @@ namespace rcl
   void exportNullSource( pybind11::module & m );
   void exportObjectGainEqCalculator( pybind11::module & m );
   void exportPanningCalculator( pybind11::module & m );
+  void exportParameterInputTerminator( pybind11::module & m );
+  void exportParameterOutputTerminator( pybind11::module & m );
   void exportPositionDecoder( pybind11::module & m );
   void exportScalarOscDecoder( pybind11::module & m );
   void exportSceneDecoder( pybind11::module & m );
@@ -72,6 +74,8 @@ In the future, however, this will change do a topical orgainisation.
   exportNullSource( m );
   exportObjectGainEqCalculator( m );
   exportPanningCalculator( m );
+  exportParameterInputTerminator( m );
+  exportParameterOutputTerminator( m );
   exportPositionDecoder( m );
   exportScalarOscDecoder( m );
   exportSceneDecoder( m );

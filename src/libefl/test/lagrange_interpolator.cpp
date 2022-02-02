@@ -1,7 +1,7 @@
 /* Copyright Institute of Sound and Vibration Research - All rights reserved */
 
 #include <libefl/vector_functions.hpp>
-#include <libefl/vector_functions_reference.hpp>
+#include <libefl/reference/vector_functions.hpp>
 
 #include <libefl/aligned_array.hpp>
 

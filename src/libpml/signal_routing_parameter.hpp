@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <ciso646>
 #include <cstdint>
-#include <climits>
+#include <limits>
 #include <initializer_list>
 #include <stdexcept>
 #include <set>
@@ -35,9 +35,9 @@ public:
   using IndexType = std::size_t;
 
   /**
-   * @note: std::numeric_limits<IndexType> would be nicer, but MSVC does not support constexpr yet.
-   */ 
-  static const IndexType cInvalidIndex = UINT_MAX;
+   * Literal constant to denote invalid (or unspecified) channel indices.
+   */
+  static constexpr IndexType cInvalidIndex = std::numeric_limits<IndexType>::max();
 
   /**
    * Structure for a single routing entry

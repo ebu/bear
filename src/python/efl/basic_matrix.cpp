@@ -55,6 +55,8 @@ void exportBasicMatrix( pybind11::module & m, char const * className )
   }), pybind11::arg( "data" ), pybind11::arg( "alignment" ) = visr::cVectorAlignmentSamples )
   .def_property_readonly( "numberOfRows", &efl::BasicMatrix<DataType>::numberOfRows )
   .def_property_readonly( "numberOfColumns", &efl::BasicMatrix<DataType>::numberOfColumns )
+    .def_property_readonly( "alignment", &efl::BasicMatrix<DataType>::alignmentElements, "Return the alignment of the numeric data (in number of elements)." )
+
   .def( "resize", &efl::BasicMatrix<DataType>::resize, pybind11::arg("numberOfRows"), pybind11::arg("numberOfColumns") )
   .def( "zeroFill", &efl::BasicMatrix<DataType>::zeroFill )
   .def( "__getitem__", []( BasicMatrix<DataType> const & vp, pybind11::tuple idx ) { return vp.at( idx[0].cast<std::size_t>(), idx[1].cast<std::size_t>() ); }, pybind11::arg( "index" ) )

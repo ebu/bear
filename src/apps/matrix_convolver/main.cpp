@@ -4,6 +4,7 @@
 #include "init_filter_matrix.hpp"
 
 #include <libefl/denormalised_number_handling.hpp>
+#include <libefl/initialise_library.hpp>
 
 #include <librbbl/fft_wrapper_factory.hpp>
 #include <librbbl/filter_routing.hpp>
@@ -100,6 +101,15 @@ int main( int argc, char const * const * argv )
 
     std::string const fftLibrary = cmdLineOptions.getDefaultedOption<std::string>( "fft-library", "default" );
 
+    bool const optDsp = cmdLineOptions.getDefaultedOption<bool>("dsp-optimisation", false );
+    if( optDsp )
+    {
+      if( not efl::initialiseLibrary("") )
+      {
+	throw std::runtime_error( "Error initialising DSP function library." );
+      }
+    }
+
     SignalFlowContext const context{ periodSize, samplingFrequency };
 
     rcl::FirFilterMatrix convolver( context, "MatrixConvolver", nullptr/*instantiate as top-level flow*/, numberOfInputChannels, numberOfOutputChannels,
@@ -149,7 +159,7 @@ int main( int argc, char const * const * argv )
     audioInterface->start( );
 
     // Rendering runs until q<Return> is entered on the console.
-    std::cout << "S3A matrix convolver running. Press \"q<Return>\" or Ctrl-C to quit." << std::endl;
+    std::cout << "VISR matrix convolver running. Press \"q<Return>\" or Ctrl-C to quit." << std::endl;
     char c;
     do
     {

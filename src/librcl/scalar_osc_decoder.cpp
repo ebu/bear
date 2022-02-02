@@ -10,6 +10,7 @@
 #include <oscpkt.hh>
 
 #include <iostream>
+#include <limits>
 
 namespace visr
 {

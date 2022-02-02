@@ -6,6 +6,8 @@
 #include <libvisr/constants.hpp>
 #include <libvisr/parameter_base.hpp>
 
+#include <python/libpythonbindinghelpers/vector_from_ndarray.hpp>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
@@ -27,7 +29,21 @@ void exportVectorParameter( py::module & m, char const * className )
 {
   py::class_<VectorParameter< DataType>, ParameterBase, efl::BasicVector<DataType> >(m, className, py::buffer_protocol() )
   .def_property_readonly_static( "staticType", []( py::object /*self*/ ) { return VectorParameter<DataType>::staticType(); } )
+  .def( pybind11::init<std::size_t>(), pybind11::arg("alignment") = visr::cVectorAlignmentSamples )
+  .def( pybind11::init<std::size_t, std::size_t>(), pybind11::arg( "numberOfElements" ), pybind11::arg( "alignment" ) = visr::cVectorAlignmentSamples )
+  .def( pybind11::init( []( pybind11::array const & data, std::size_t alignment )
+  {
+    visr::efl::BasicVector< DataType > raw = visr::python:: bindinghelpers::vectorFromNdArray< DataType >( data, alignment );
+    VectorParameter<DataType>* inst = new VectorParameter<DataType>( raw.size(), alignment );
+    inst->copy( raw );
+    return inst;
+  } ), pybind11::arg( "data" ), pybind11::arg( "alignment" ) = visr::cVectorAlignmentSamples )
+  .def( pybind11::init<visr::pml::VectorParameterConfig>(), pybind11::arg("parameterConfig") )
   // all vector access functions are already defined in BasicVector<DataType>;
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
+  .def_static( "fromAudioFile", &VectorParameter<DataType>::fromAudioFile, pybind11::arg("file"), pybind11::arg("alignment") = visr::cVectorAlignmentSamples )
+#endif
+  .def_static( "fromTextFile", &VectorParameter<DataType>::fromTextFile, pybind11::arg( "file" ), pybind11::arg( "alignment" ) = visr::cVectorAlignmentSamples )
   ;
 }
 

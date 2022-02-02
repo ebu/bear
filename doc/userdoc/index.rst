@@ -4,8 +4,8 @@
    contain the root `toctree` directive.
 
 :tocdepth: 3
-   
-================   
+
+================
 VISR User Manual
 ================
 
@@ -22,4 +22,6 @@ VISR User Manual
    object-based-audio-with-visr
    rcl_component_documentation
    binaural-synthesis-toolkit
+   time-frequency-processing
+   visr-component-api
    references

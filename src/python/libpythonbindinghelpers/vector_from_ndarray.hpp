@@ -23,7 +23,7 @@ namespace bindinghelpers
  * suitable conversion function.
  */
 template<typename DataType>
-efl::BasicVector<DataType> vectorFromNdArray( pybind11::array_t<SampleType> const & array, std::size_t alignment = 0 )
+efl::BasicVector<DataType> vectorFromNdArray( pybind11::array_t<DataType> const & array, std::size_t alignment = 0 )
 {
   if( array.ndim() != 1 )
   {

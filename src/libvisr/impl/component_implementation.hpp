@@ -3,10 +3,13 @@
 #ifndef VISR_IMPL_COMPONENT_IMPLEMENTATION_HPP_INCLUDED
 #define VISR_IMPL_COMPONENT_IMPLEMENTATION_HPP_INCLUDED
 
-#include "../constants.hpp"
-#include "../export_symbols.hpp"
-#include "../status_message.hpp"
-#include "../signal_flow_context.hpp"
+#include "time_implementation.hpp"
+
+#include <libvisr/constants.hpp>
+#include <libvisr/export_symbols.hpp>
+#include <libvisr/status_message.hpp>
+#include <libvisr/signal_flow_context.hpp>
+#include <libvisr/time.hpp>
 
 #include <cstddef>
 #include <string>
@@ -250,10 +253,33 @@ public:
 
   SignalFlowContext const & context( ) const { return mContext; }
 
+  /**
+   * Retrieve a reference to the object representing the time subsystem, const version,
+   */
+  Time const & time() const;
+   
+  /**
+    * Retrieve a reference to the object representing the time subsystem, nonconst version.
+    */
+  Time & time();
+    
+  /**
+   * Retrieve the implementation object of the time subsystem.
+   *  This method is public to be used by the runtime system.
+   */
+  TimeImplementation const & timeImplementation() const;
+
+  /**
+   * Retrieve the implementation object of the time subsystem, nonconst version
+   *  This method is public to be used by the runtime system.
+   */
+  TimeImplementation & timeImplementation();
+    
 private:
   /**
    * Set the parent component. Providing nullptr effectively removes
    * the association to parent.
+   * @todo Need to update the reference to the time method?
    */
   void setParent( CompositeComponentImplementation * parent );
 
@@ -306,6 +332,11 @@ private:
    * Note: We link directly to the implementation object (might be renamed to 'internal')
    */
   CompositeComponentImplementation * mParent;
+    
+  /**
+   * Internal representation for the time interface exposed to components.
+   */
+  Time mTime;
 };
 
 } // namespace impl

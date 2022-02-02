@@ -19,6 +19,7 @@ SET( EXTERNAL_NAME visr_renderer~ )
 SET( PROJECT_NAME visr_renderer_max_external )
 
 ADD_DEFINITIONS( -DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}" )
+add_definitions( -DPROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}" )
 
 ADD_LIBRARY( ${PROJECT_NAME} MODULE
 options.hpp
@@ -53,6 +54,8 @@ TARGET_LINK_LIBRARIES( ${PROJECT_NAME} apputilities_shared ) # slight misnomer, 
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME} signalflows_shared )
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME} maxsupport_shared )
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME} Boost::filesystem )
+
+set_target_properties( ${PROJECT_NAME} PROPERTIES FOLDER max_msp_externals )
 
 install( TARGETS ${PROJECT_NAME}
          LIBRARY DESTINATION max COMPONENT max_externals

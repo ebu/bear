@@ -21,7 +21,7 @@ namespace bindinghelpers
  * @return Initialized matrix object.
  */
 template<typename DataType>
-efl::BasicMatrix<DataType> matrixFromNdArray( pybind11::array_t<SampleType> const & array, std::size_t alignment = 0 )
+efl::BasicMatrix<DataType> matrixFromNdArray( pybind11::array_t<DataType> const & array, std::size_t alignment = 0 )
 {
   if( array.ndim() != 2 )
   {

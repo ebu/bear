@@ -80,7 +80,8 @@ void exportBasicVector( py::module & m, char const * className )
           std::copy( v.begin(), v.end(), inst->data() );
           return inst;
         } ), py::arg( "values" ), py::arg( "alignment" ) = visr::cVectorAlignmentSamples, "Create a BasicVector from a Python list." )
-  .def_property_readonly( "size", []( BasicVector<DataType> const & vp ){ return vp.size(); } )
+    .def_property_readonly( "size", &BasicVector<DataType>::size )
+    .def_property_readonly( "alignment", &BasicVector<DataType>::alignmentElements, "Return the alignment of the numeric data (in number of elements)." )
   .def( "resize", []( BasicVector<DataType> & vp, std::size_t newSize ) { vp.resize(newSize); }, py::arg( "numberOfElements" ) )
   .def( "zeroFill", []( BasicVector<DataType> & vp ) { vp.zeroFill(); } )
   .def( "set", &setData<DataType> )

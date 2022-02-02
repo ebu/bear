@@ -20,11 +20,8 @@ namespace rbbl
 {
 
 /**
- * A FIFO-type message queue template class for storing and passing message data.
+ * Data type for describing Biquad IIR coefficients, also known as second-order sections.
  * @tparam CoeffType Type of the contained elements.
- * @note This class does provide the same level of thread safety as, e.g., the STL.
- * I.e., calling code from different thread must ensure that concurrent accesses
- * to the same instances are appropriately secured against race conditions.
  */
 template< typename CoeffType >
 class VISR_RBBL_LIBRARY_SYMBOL BiquadCoefficient
@@ -47,20 +44,25 @@ public:
   BiquadCoefficient( BiquadCoefficient<CoeffType> const & rhs ) = default;
 
   /**
-   * Create a BiquadCoefficient objects from JSON and XML representations.
+   * Create a BiquadCoefficient objects from JSON and XML representations,
+   * modeling the 'named constructor' idiom.
    */
   //@{
   static BiquadCoefficient fromJson( boost::property_tree::ptree const & tree );
 
   static BiquadCoefficient fromJson( std::basic_istream<char> & stream );
 
+  static BiquadCoefficient fromJson( std::string const & str );
+
   static BiquadCoefficient fromXml( boost::property_tree::ptree const & tree );
 
   static BiquadCoefficient fromXml( std::basic_istream<char> & stream );
-  //@}
+
+  static BiquadCoefficient fromXml( std::string const & str );
+//@}
 
   BiquadCoefficient( CoeffType b0, CoeffType b1, CoeffType b2,
-                   CoeffType a1, CoeffType a2 )
+		     CoeffType a1, CoeffType a2 )
   {
     mCoeffs[0] = b0;
     mCoeffs[1] = b1;
@@ -94,7 +96,7 @@ public:
   {
     return mCoeffs[ idx ];
   }
-  
+
   CoeffType & operator[]( std::size_t idx )
   {
     return mCoeffs[ idx ];
@@ -110,7 +112,7 @@ public:
     return mCoeffs.at( idx );
   }
 
-  
+
   CoeffType const & b0() const { return mCoeffs[0]; }
 
   CoeffType const & b1() const { return mCoeffs[1]; }
@@ -118,7 +120,7 @@ public:
   CoeffType const & b2() const { return mCoeffs[2]; }
 
   CoeffType const & a1() const { return mCoeffs[3]; }
-  
+
   CoeffType const & a2() const { return mCoeffs[4]; }
 
 
@@ -129,19 +131,23 @@ public:
   CoeffType& b2() { return mCoeffs[2]; }
 
   CoeffType& a1() { return mCoeffs[3]; }
-  
+
   CoeffType& a2() { return mCoeffs[4]; }
 
   void loadJson( boost::property_tree::ptree const & tree );
 
   void loadJson( std::basic_istream<char> & );
 
+  void loadJson( std::string const & str );
+
   void loadXml( boost::property_tree::ptree const & tree );
 
   void loadXml( std::basic_istream<char> & );
 
+  void loadXml( std::string const & str );
+
   /**
-   * 
+   * Write a biquad coefficient set into Json and XML representations.
    */
   //@{
   void writeJson( boost::property_tree::ptree & tree ) const;
@@ -319,6 +325,10 @@ class VISR_RBBL_LIBRARY_SYMBOL BiquadCoefficientMatrix
 {
 public:
   explicit BiquadCoefficientMatrix( std::size_t numberOfFilters, std::size_t numberOfBiquads );
+
+explicit BiquadCoefficientMatrix( std::initializer_list<
+                                  std::initializer_list<
+                                  BiquadCoefficient<CoeffType> > > const & initList );
 
   ~BiquadCoefficientMatrix();
 

@@ -150,4 +150,9 @@ std::size_t Component::period() const { return mImpl->period(); }
 
 SamplingFrequencyType Component::samplingFrequency() const { return mImpl->samplingFrequency(); }
 
+Time const & Component::time() const
+{
+  return mImpl->time();
+}
+
 } // namespace visr

@@ -54,7 +54,7 @@ DenormalisedNumbers::State DenormalisedNumbers::setDenormHandling( State newStat
     newCW = newCW bitor cFlushToZeroMask;
   }
   _mm_setcsr( newCW );
-  return State( oldDAZ, oldFTZ );
+  return State( oldFTZ, oldDAZ );
 #else // #ifdef INTEL_PLATFORM
   // Do nothing, return default object.
   return State();

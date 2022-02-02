@@ -8,10 +8,8 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <boost/bind.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/spirit/include/qi.hpp>
 
 #include <memory>
 #include <numeric>
@@ -93,6 +91,7 @@ void initFilterMatrix( std::string const & filterList,
       throw std::invalid_argument( std::string( "MatrixConvolver::initFilter(): The file \"" ) + filePath.string()
         + std::string( "\" does not exist.") );
     }
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
     pml::MatrixParameter<DataType> const mat
       = pml::MatrixParameter<DataType>::fromAudioFile( filePath.string( ), matrix.alignmentElements( ) );
     lengths[fileIdx] = mat.numberOfColumns();
@@ -107,6 +106,9 @@ void initFilterMatrix( std::string const & filterList,
       startIndex[fileIdx] = (fileIdx == 0) ? 0 : endIndex[fileIdx - 1];
     }
     endIndex[fileIdx] = startIndex[fileIdx] + numChannels[fileIdx];
+#else
+    throw std::logic_error( "MatrixConvolver: Loading of filter files requires that VISR is built with option BUILD_USE_SNDFILE_LIBRARY." );
+#endif
   }
   // Check and set the final filter length
   IndexVec::const_iterator maxLengthIt = std::max_element( lengths.begin(), lengths.end() );
@@ -152,6 +154,7 @@ void initFilterMatrix( std::string const & filterList,
   {
     boost::filesystem::path const filePath = absolute( boost::filesystem::path( filterNames[fileIdx] ) );
     // File existence already checked.
+#ifdef VISR_PML_USE_SNDFILE_LIBRARY
     pml::MatrixParameter<DataType> const mat
       = pml::MatrixParameter<DataType>::fromAudioFile( filePath.string(), matrix.alignmentElements() );
     for( std::size_t irIdx( 0 ); irIdx < mat.numberOfRows(); ++irIdx )
@@ -163,6 +166,9 @@ void initFilterMatrix( std::string const & filterList,
         throw std::invalid_argument( "MatrixConvolver::initFilter(): Error while copying impulse response" );
       }
     }
+#else
+    assert( false and "Logical error: Missing build option BUILD_USE_SNDFILE_LIBRARY library must have been detected above." );
+#endif
   }
 }
 

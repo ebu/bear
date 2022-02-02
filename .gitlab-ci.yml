@@ -132,7 +132,7 @@ variables:
   extends: .default_config
   script:
     - CMAKE_OPTIONS_ALL="-DCMAKE_BUILD_TYPE=Release
-                         -DBUILD_USE_JACK=ON
+                         -DBUILD_AUDIOINTERFACES_JACK=ON
                          $CMAKE_OPTIONS"
     - cmake -E remove_directory $BUILD_FOLDER
     # folllowing line is for debug purposes only

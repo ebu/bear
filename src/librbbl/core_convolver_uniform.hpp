@@ -46,14 +46,19 @@ public:
    * Constructor.
    * @param numberOfInputs The number of input signals processed.
    * @param numberOfOutputs The number of output channels produced.
-   * @param blockLength The numbers of samples processed for each input or output channels in one process() call.
+   * @param blockLength The numbers of samples processed for each input or
+   * output channels in one process() call.
    * @param maxFilterLength The maximum length of the FIR filters (in samples).
-   * @param maxFilterEntries The maximum number of filters that can be stored within the filter. This number can be different from \p maxRoutingPoints, as the convolver can 
-   * both reuse the same filter representation multiple times, or store multiple filter representations to enable switching of the filter characteristics at runtime.
-   * @param initialFilters The initial set of filter coefficients. The matrix rows represent the distinct filters.
-   * @param alignment The alignment (given as a multiple of the sample type size) to be used to allocate all data structure. It also guaranteees 
-   * the alignment of the input and output samples to the process call. 
-   * @param fftImplementation A string to determine the FFT wrapper to be used. The default value results in using the default FFT implementation for the given data type.
+   * @param maxFilterEntries The maximum number of filters that can be stored
+   * within the filter.
+   * @param initialFilters The initial set of filter coefficients. The matrix
+   * rows represent the distinct filters.
+   * @param alignment The alignment (given as a multiple of the sample type
+   * size) to be used to allocate all data structure. It also guaranteees the
+   * alignment of the input and output samples to the process call.
+   * @param fftImplementation A string to determine the FFT wrapper to be used.
+   * The default value results in using the default FFT implementation for the
+   * given data type.
    */
   explicit CoreConvolverUniform( std::size_t numberOfInputs,
                                          std::size_t numberOfOutputs,

@@ -15,12 +15,15 @@
 #include <libobjectmodel/point_source_with_diffuseness.hpp>
 #include <libobjectmodel/plane_wave.hpp>
 
+#include <libpanning/CAP_VBAP.h>
+
 #include <libpml/listener_position.hpp>
 
 #include <boost/filesystem.hpp>
 
 #include <ciso646>
 #include <cstdio>
+#include <numeric>
 
 namespace visr
 {
@@ -31,14 +34,20 @@ CAPGainCalculator::CAPGainCalculator( SignalFlowContext const & context,
                                       char const * name,
                                       CompositeComponent * parent,
                                       std::size_t numberOfObjects,
-                                      panning::LoudspeakerArray const & arrayConfig )
+                                      panning::LoudspeakerArray const & arrayConfig,
+                                      PanningMode panningMode /* = PanningMode::LF */,
+                                      bool hfGainOutput /*= false*/
+                                      )
  : AtomicComponent( context, name, parent )
  , mNumberOfObjects( numberOfObjects )
  , mNumberOfLoudspeakers( arrayConfig.getNumRegularSpeakers() )
  , mSourcePositions( mNumberOfObjects, panning::XYZ() )
+ , mVbipCalculator( hfGainOutput ? new panning::CAP_VBAP( arrayConfig ) : nullptr )
  , mObjectVectorInput( "objectVectorInput", *this, pml::EmptyParameterConfig() )
  , mListenerPositionInput( "listenerPosition", *this, pml::EmptyParameterConfig() )
  , mGainOutput( "gainOutput", *this, pml::MatrixParameterConfig( arrayConfig.getNumRegularSpeakers(), mNumberOfObjects ) )
+ , mHfGainOutput( hfGainOutput ? new GainOutput("hfGainOutput", *this, pml::MatrixParameterConfig(arrayConfig.getNumRegularSpeakers(), mNumberOfObjects) )
+                               : nullptr )
 {
   mLevels.resize( mNumberOfObjects );
   mLevels = 0.0f;
@@ -48,37 +57,61 @@ CAPGainCalculator::CAPGainCalculator( SignalFlowContext const & context,
 
   // Set initial positions
   mCapCalculator.setListenerPosition( static_cast<CoefficientType>(0.0), static_cast<CoefficientType>(0.0), static_cast<CoefficientType>(0.0) );
-  mCapCalculator.setListenerAuralAxis( static_cast<CoefficientType>(0.0), static_cast<CoefficientType>(1.0), static_cast<CoefficientType>(0.0) );
+  mCapCalculator.setListenerAuralAxis( static_cast<CoefficientType>(1.0), static_cast<CoefficientType>(0.0), static_cast<CoefficientType>(0.0) );
+    
+  if (panningMode == PanningMode::HF) mCapCalculator.setHFmode();
 
+  if( mVbipCalculator )
+  {
+    mVbipCalculator->setListenerPosition(static_cast<CoefficientType>(0.0), static_cast<CoefficientType>(0.0), static_cast<CoefficientType>(0.0));
+    mTempHfGains.resize(arrayConfig.getNumRegularSpeakers());
+  }
 }
 
-CAPGainCalculator::~CAPGainCalculator()
+CAPGainCalculator::~CAPGainCalculator() = default;
+
+void CAPGainCalculator::setNearTripletBoundaryCosTheta(SampleType ct)
 {
+  if( not mVbipCalculator )
+  {
+    throw std::logic_error( "CAPGainCalculator: setNearTripletBoundaryCosTheta() does not make sense if the HF gain calculation is deactivated." );
+  }
+  mVbipCalculator->setNearTripletBoundaryCosTheta(ct);
 }
 
 void CAPGainCalculator::process()
 {
+  if( mListenerPositionInput.changed() )
+  {
+    pml::ListenerPosition const & listener = mListenerPositionInput.data();
+    // Set the listener position and orientation
+    // TODO: Add direct inter-aural axis control
+    mCapCalculator.setListenerPosition(listener.x(), listener.y(), listener.z());
+    mCapCalculator.setListenerOrientation(listener.yaw(), listener.pitch(), listener.roll(), false);
+    // printf("setListenerOrientation ypr %f %f %f %d\n", listener.yaw(), listener.pitch(), listener.roll(), false );
+
+    if( mVbipCalculator )
+    {
+      mVbipCalculator->setListenerPosition(listener.x(), listener.y(), listener.z());
+    }
+    mListenerPositionInput.resetChanged();
+  }
+
   // TODO: decide whether to always process
-  if( mObjectVectorInput.changed() or mListenerPositionInput.changed() )
+  if (mObjectVectorInput.changed() or mListenerPositionInput.changed())
   {
     efl::BasicMatrix<CoefficientType> & gains = mGainOutput.data();
-    assert( (gains.numberOfRows() == mNumberOfLoudspeakers) and (gains.numberOfColumns() == mNumberOfObjects) );
-    process( mObjectVectorInput.data(),
-             mListenerPositionInput.data(),
-             gains );
+    assert((gains.numberOfRows() == mNumberOfLoudspeakers) and (gains.numberOfColumns() == mNumberOfObjects));
+    process(mObjectVectorInput.data(), gains);
   }
+
   if( mObjectVectorInput.changed() )
   {
     mObjectVectorInput.resetChanged();
   }
-  if( mListenerPositionInput.changed() )
-  {
-    mListenerPositionInput.resetChanged();
-  }
 }
 
 void CAPGainCalculator::process( objectmodel::ObjectVector const & objects, 
-                                 pml::ListenerPosition const & listener,
                                  efl::BasicMatrix<CoefficientType> & gainMatrix )
 {
   gainMatrix.zeroFill(); // Zero the result matrix to get zero gains for all unused source channels.
@@ -148,30 +181,48 @@ void CAPGainCalculator::process( objectmodel::ObjectVector const & objects,
   } // for( objectmodel::ObjectVector::value_type const & objEntry : objects )
   mCapCalculator.setSourcePositions( &mSourcePositions[0] );
 
-  // Set the listener position and orientation
-  mCapCalculator.setListenerPosition( listener.x(), listener.y(), listener.z() );
-  // TODO: Calculate the listener aural axis from the values listener.yaw(), listener.pitch(), and listener.roll()
-  CoefficientType const auralAxisX = 0.0f; // TODO: Replace by computation
-  CoefficientType const auralAxisY = 1.0f; // TODO: Replace by computation
-  CoefficientType const auralAxisZ = 0.0f; // TODO: Replace by computation
-  mCapCalculator.setListenerAuralAxis( auralAxisX, auralAxisY, auralAxisZ );
-
   if( mCapCalculator.calcGains() != 0 )
   {
     std::cout << "CAPGainCalculator: Error calculating VBAP gains." << std::endl;
   }
   
-  efl::BasicMatrix<Afloat> const & vbapGains = mCapCalculator.getGains();
+  efl::BasicMatrix<Afloat> const & capGains = mCapCalculator.getGains();
   // This is essentially a matrix transposition and a row-wise scalar multiplication.
   for( std::size_t chIdx(0); chIdx < mNumberOfObjects; ++chIdx )
   {
-    Afloat const * const gainRow = vbapGains.row( chIdx );
+    Afloat const * const gainRow = capGains.row( chIdx );
     objectmodel::LevelType const level = mLevels[ chIdx ];
+//      std::cout<<"gain obj "<<chIdx<<" [";
     for( std::size_t outIdx(0); outIdx < mNumberOfLoudspeakers; ++outIdx )
     {
       gainMatrix( outIdx, chIdx ) = level * gainRow[ outIdx ];
+//        std::cout<<std::to_string(gainMatrix( outIdx, chIdx ))<<", ";
+    }
+//      std::cout<<"]"<<std::endl;
+  }
+  
+  //if (rand() % 256 == 1)
+  //printf("gains obj0 %f %f\n", gainMatrix(0,0), gainMatrix(1,0) );
+
+  if( mVbipCalculator )
+  {
+    efl::BasicMatrix<Afloat> & vbipGains = mHfGainOutput->data();
+    for (std::size_t chIdx(0); chIdx < mNumberOfObjects; ++chIdx)
+    {
+      panning::XYZ const & pos = mSourcePositions[chIdx];
+      objectmodel::LevelType const level = mLevels[chIdx];
+      mVbipCalculator->calculateGainsUnNormalised(pos.x, pos.y, pos.z, &mTempHfGains[0], pos.isInfinite );
+      std::for_each(mTempHfGains.begin(), mTempHfGains.end(), [](Afloat & val) { return std::sqrt(std::max(val, 0.0f)); });
+      Afloat const sigNorm = std::sqrt(std::accumulate(mTempHfGains.begin(), mTempHfGains.end(), 0.0f,
+        [](SampleType acc, SampleType val) { return acc + val * val; }));
+      Afloat const normedLevel = level / std::max(sigNorm, std::numeric_limits<SampleType>::epsilon());
+      for (std::size_t outIdx(0); outIdx < mNumberOfLoudspeakers; ++outIdx)
+      {
+        vbipGains(outIdx, chIdx) = normedLevel * mTempHfGains[outIdx];
+      }
     }
   }
+
 }
 
 } // namespace rcl

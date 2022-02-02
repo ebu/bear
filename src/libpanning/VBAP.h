@@ -41,20 +41,22 @@ public:
    * @param x Cartesian x coordinate of the source position
    * @param y Cartesian y coordinate of the source position
    * @param z Cartesian z coordinate of the source position
+   * @param planeWave Whether the source is handles a point source (false) or plane wave (true)
    * @param[out] gains array holding the panning gains for the regular (non-virtual) loudspeakers).
    * Buffer must provide space for at least getNumSpeakers() values.
    */
-  void calculateGains( SampleType x, SampleType y, SampleType z, SampleType * gains ) const;
+  void calculateGains( SampleType x, SampleType y, SampleType z, SampleType * gains, bool planeWave ) const;
 
   /**
   * Calculate the panning gains for a single source position without normalisation.
   * @param x Cartesian x coordinate of the source position
   * @param y Cartesian y coordinate of the source position
   * @param z Cartesian z coordinate of the source position
+  * @param planeWave Whether the source is handles a point source (false) or plane wave (true)
   * @param[out] gains array holding the panning gains for the regular (non-virtual) loudspeakers).
   * Buffer must provide space for at least getNumSpeakers() values.
   */
-  void calculateGainsUnNormalised( SampleType x, SampleType y, SampleType z, SampleType * gains ) const;
+  void calculateGainsUnNormalised( SampleType x, SampleType y, SampleType z, SampleType * gains, bool planeWave ) const;
 
   /**
    * Reset the listener position.
@@ -119,10 +121,9 @@ private:
    * @param posX Cartesian x coordinate of the sound source position
    * @param posY Cartesian y coordinate of the sound source position
    * @param posZ Cartesian z coordinate of the sound source position
-   
-   
+   * @param planeWave Flag whether the source is a poiunt source (false) or plane wave (true)
    */
-  void calcPlainVBAP( SampleType posX, SampleType posY, SampleType posZ ) const;
+  void calcPlainVBAP( SampleType posX, SampleType posY, SampleType posZ, bool planeWave ) const;
   
   /**
    * Applies rereouting coefficients to VBAP gains

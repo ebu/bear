@@ -49,10 +49,30 @@ public:
   /*VISR_CORE_LIBRARY_SYMBOL*/ explicit AudioPortBase( char const * name, Component& container, AudioSampleType::Id sampleType, PortBase::Direction direction, std::size_t width );
 
   /**
+   * Deleted copy constructor to prohibit copy construction.
+   */
+  AudioPortBase( AudioPortBase const & ) = delete;
+
+  /**
+   * Deleted move constructor to prohibit moving.
+   */
+  AudioPortBase( AudioPortBase && ) = delete;
+  
+  /**
    * Destructor (virtual).
-   * Audio ports can possibley be created and held polymorphically, although this is not done in standard components.
+   * Audio ports can possibly be created and held polymorphically, although this is not done in standard components.
    */
   /*VISR_CORE_LIBRARY_SYMBOL*/ virtual ~AudioPortBase();
+
+  /**
+   * Deleted assignment operator to prevent assignment.
+   */
+  AudioPortBase & operator=( AudioPortBase const & ) = delete;
+
+  /**
+   * Deleted move assignment operator to prevent move assignment.
+   */
+  AudioPortBase & operator=( AudioPortBase && ) = delete;
 
   /**
    * Set the width (i.e., the number of individual audio signals) contained within this port.

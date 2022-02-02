@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <vector>
 
@@ -22,7 +23,7 @@ namespace test
 
 BOOST_AUTO_TEST_CASE( CircularBufferAllocation )
 {
-  std::size_t const bufferSize = 253; // deliberateley odd
+  std::size_t const bufferSize = 253; // deliberately odd
   std::size_t const numChannels = 2;
 
   CircularBuffer<float> buffer( numChannels, bufferSize, 16 );

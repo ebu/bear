@@ -45,7 +45,7 @@ public:
 private:
   static constexpr std::size_t storageSize() { return internalStorageSize( N + 1 ); }
 
-  static constexpr std::size_t internalStorageSize( size_t length )
+  static constexpr std::size_t internalStorageSize( std::size_t length )
   {
     return length <= 2 ? length : length + internalStorageSize( length / 2 );
   }

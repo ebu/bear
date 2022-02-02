@@ -32,7 +32,7 @@ namespace panning
 {
   class LoudspeakerArray;
 }
-  
+
 namespace pml
 {
 // class ListenerPosition;
@@ -117,10 +117,11 @@ public:
                               bool adaptiveListenerPosition,
                               PanningMode panningMode = PanningMode::LF,
                               Normalisation lfNormalisation = Normalisation::Default,
-                              Normalisation hfNormalisation = Normalisation::Default, 
+                              Normalisation hfNormalisation = Normalisation::Default,
                               Normalisation diffuseNormalisation = Normalisation::Default,
                               pml::ListenerPosition const & listenerPosition = pml::ListenerPosition(0.0f, 0.0f, 0.0f )
   );
+
 
   /**
    * Disabled (deleted) copy constructor
@@ -134,11 +135,10 @@ public:
   ~PanningCalculator();
 
   /**
-   * The process function. 
+   * The process function.
    * It takes a vector of objects as input and calculates a vector of output gains.
    */
   void process();
-
 
 private:
   bool separateLowpassPanning() const { return bool(mLowFrequencyGainOutput); }
@@ -205,7 +205,7 @@ private:
    * The calculator object to generate the panning matrix coefficients.
    */
   std::unique_ptr<panning::VBAP> mVbapCalculator;
-  
+
   /**
    * Temporary storage for the computed panning gains of one source.
    * Dimension: mNumberOfRegularLoudspeakers
@@ -259,7 +259,12 @@ private:
   * Optional gain output for signals to be decorrelated.
   */
   std::unique_ptr<MatrixPort> mDiffuseGainOutput;
+
+
 };
+
+
+
 
 /**
 * Bitwise operator to combine output port flags.
@@ -272,6 +277,7 @@ VISR_RCL_LIBRARY_SYMBOL PanningCalculator::PanningMode operator|( PanningCalcula
 */
 VISR_RCL_LIBRARY_SYMBOL PanningCalculator::PanningMode operator&( PanningCalculator::PanningMode lhs,
                                                                   PanningCalculator::PanningMode rhs );
+
 
 
 } // namespace rcl

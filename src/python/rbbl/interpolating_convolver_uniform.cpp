@@ -114,10 +114,11 @@ void exportInterpolatingConvolverUniform( pybind11::module & m, char const * nam
     .def( "clearFilters", &InterpolatingConvolverUniform<ElementType>::clearFilters )
     .def( "initFilters", &InterpolatingConvolverUniform<ElementType>::initFilters, pybind11::arg( "newFilters" ) )
     .def( "setImpulseResponse", &InterpolatingConvolverUniform<ElementType>::setImpulseResponse,
-      pybind11::arg("ir"), pybind11::arg( "filterLength"), pybind11::arg( "filterIdx" ), pybind11::arg( "alignment" ) = 0 )
-	.def( "setInterpolant", &InterpolatingConvolverUniform<ElementType>::setInterpolant, pybind11::arg( "interpolant" ) )
-	.def( "setInterpolants", &InterpolatingConvolverUniform<ElementType>::setInterpolants, pybind11::arg( "interpolants" ) )
-	.def( "clearInterpolants", &InterpolatingConvolverUniform<ElementType>::clearInterpolants )
+      pybind11::arg("ir"), pybind11::arg( "filterLength"), pybind11::arg( "filterIdx" ),
+      pybind11::arg( "alignment" ) = 0 )
+    .def( "setInterpolant", &InterpolatingConvolverUniform<ElementType>::setInterpolant, pybind11::arg( "interpolant" ), pybind11::arg( "startTransition" ) )
+    .def( "setInterpolants", &InterpolatingConvolverUniform<ElementType>::setInterpolants, pybind11::arg( "interpolants" ), pybind11::arg( "startTransition" ) )
+    .def( "clearInterpolants", &InterpolatingConvolverUniform<ElementType>::clearInterpolants )
   ;
 }
 
