@@ -1,0 +1,14 @@
+include($ENV{src}/visr_bear/data/files.txt)
+
+foreach(file ${all_files})
+  list(
+    APPEND
+    files
+    "\"${file}\" = {
+      url = \"${${file}_url}\"\;
+      sha256 = \"${${file}_sha256}\"\;
+      fname = \"${${file}_fname}\"\;
+    }\;")
+endforeach()
+list(JOIN files "\n" files_str)
+file(WRITE $ENV{out}/default.nix "{${files_str}}")
