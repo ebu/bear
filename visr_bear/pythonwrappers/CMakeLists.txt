@@ -104,6 +104,21 @@ install(TARGETS ${PROJECT_NAME} DESTINATION ${BEAR_PYTHON_SITE_PACKAGES})
 
 # install known data files as a separate python package
 install(DIRECTORY visr_bear_data DESTINATION ${BEAR_PYTHON_SITE_PACKAGES})
-install(FILES ${BEAR_DATA_OUTPUT_PATH_DEFAULT}
-              ${BEAR_DATA_OUTPUT_PATH_DEFAULT_SMALL}
-        DESTINATION ${BEAR_PYTHON_SITE_PACKAGES}/visr_bear_data)
+function(install_data_file name path)
+  if(BEAR_SYMLINK_DATA_FILES AND path)
+    install(
+      CODE "execute_process( \
+    COMMAND ${CMAKE_COMMAND} -E create_symlink \
+    ${path} \
+    ${BEAR_PYTHON_SITE_PACKAGES}/visr_bear_data/${name} \
+    )")
+  else()
+    install(
+      FILES ${path}
+      DESTINATION ${BEAR_PYTHON_SITE_PACKAGES}/visr_bear_data
+      RENAME ${name}
+      OPTIONAL)
+  endif()
+endfunction()
+install_data_file("default.tf" "${BEAR_DATA_OUTPUT_PATH_DEFAULT}")
+install_data_file("default_small.tf" "${BEAR_DATA_OUTPUT_PATH_DEFAULT_SMALL}")

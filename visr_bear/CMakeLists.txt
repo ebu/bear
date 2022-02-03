@@ -31,6 +31,9 @@ set(BEAR_DATA_PATH_DEFAULT
 set(BEAR_DATA_PATH_DEFAULT_SMALL
     CACHE PATH "path to the default small data file if externally provided")
 
+option(BEAR_SYMLINK_DATA_FILES
+       "symlink data files into python package instead of copying" OFF)
+
 cmake_dependent_option(BEAR_DEMO "build demo module" ${IS_ROOT_PROJECT}
                        "BUILD_PYTHON_BINDINGS" OFF)
 set(BEAR_VISR_LIB_TYPE
