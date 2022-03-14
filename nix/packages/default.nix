@@ -20,5 +20,5 @@
   };
 
   bear_pkgs = callPackage ./bear { inherit python visr_python ear numpy_quaternion; src = bear_src_tidy; };
-  inherit (bear_pkgs) data_files visr_bear bear;
+  inherit (bear_pkgs) data_files visr_bear bear bear_docker;
 }
