@@ -18,5 +18,12 @@ jobs:
       with:
         name: ebubear
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-        pushFilter: '(-source$|\.tf$)'
-    - run: nix-build nix -A bear
+        pushFilter: '(-source$|\.tf$|docker)'
+    - run: nix-build nix -A bear --no-out-link
+
+    - run: nix-build nix -A bear_docker -o bear_docker.tar.gz
+    - uses: actions/upload-artifact@v3
+      with:
+        name: bear_docker.tar.gz
+        path: bear_docker.tar.gz
+    - run: rm bear_docker.tar.gz
