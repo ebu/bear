@@ -18,7 +18,74 @@ This is currently a pre-release, awaiting code to generate the data files from p
 [VISR]: https://github.com/s3a-spatialaudio/VISR
 [EAR Production Suite]: https://ear-production-suite.ebu.io/
 
-## Install
+## Running with Docker
+
+Building the BEAR can be challenging; as an alternative it's possible to run it
+in docker if you just want to render files.
+
+-   Install docker:
+
+    -   On linux, install the docker package.
+
+    -   On OSX or Windows, install docker desktop, or follow a guide
+        [like this](https://medium.com/crowdbotics/a-complete-one-by-one-guide-to-install-docker-on-your-mac-os-using-homebrew-e818eb4cfc3)
+        if the docker desktop license is not suitable.
+
+-   Download the image, either:
+
+    -   From a workflow artifact -- go to the
+        [list of workflows](https://github.com/ebu/bear/actions/workflows/build.yml?query=branch%3Amain)
+        , select one, and download `bear_docker.tar.gz` from the list of
+        artifacts. It will come as a zip file which you'll have to extract (a
+        github actions limitation).
+
+    -   From [a release](https://github.com/ebu/bear/releases) -- future releases
+        will include a `bear_docker.tar.gz` or similar file.
+
+-   Load the image with:
+
+        sudo docker load -i path/to/bear_docker.tar.gz
+
+    On windows you probably don't need sudo.
+
+To render a file in.wav to out.wav in the current directory:
+
+    sudo docker run --rm -v $(pwd):/data bear bear-render data/in.wav data/out.wav
+
+Or to see the available options, run:
+
+    sudo docker run --rm bear bear-render --help
+
+`-v` sets up a mapping between files inside the container and files outside (so
+mapping the current directory (via `$(pwd)`) to `/data` means that `in.wav`
+becomes `/data/in.wav` on the command-line); this is required because docker
+runs processes in an isolated environment.
+
+<details>
+<summary>explanation of arguments</summary>
+
+    sudo docker run
+
+the command to run a container
+
+    --rm
+
+delete the created container (not the image) after is finishes
+
+    -v $(pwd):/data
+
+allow the container to access files in the current directory (see above)
+
+    bear
+
+the name of the image/container to run
+
+    bear-render data/in.wav data/out.wav
+
+The BEAR command-line to run.
+</details>
+
+## Native Install
 
 To get this running, you'll need to install:
 
