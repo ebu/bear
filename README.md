@@ -44,10 +44,6 @@ Install it by changing into this directory and running:
 
     pip install -e .
 
-To download required data files, run:
-
-    python -m bear.data.download_data
-
 For development you can install the test and dev dependencies with:
 
     pip install -e .[test,dev]
