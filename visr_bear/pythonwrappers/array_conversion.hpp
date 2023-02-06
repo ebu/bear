@@ -17,7 +17,12 @@ namespace python {
 
     if (arr.ndim() != 2) throw py::value_error(name + " must have 2 dimensions");
     if ((size_t)arr.shape(1) != n_samples) throw py::value_error(name + " has wrong length");
-    if ((size_t)arr.strides(1) != sizeof(float))
+
+    // check sample stride. in degenerate cases, the stride of contiguous
+    // arrays no longer matches the item size, see
+    // https://numpy.org/doc/1.24/reference/arrays.ndarray.html#internal-memory-layout-of-an-ndarray
+    bool stride_invalid = arr.shape(0) == 0 || arr.shape(1) == 1;
+    if (!stride_invalid && (size_t)arr.strides(1) != sizeof(float))
       throw py::value_error(name + " must have stride of 1 along samples");
 
     std::vector<float *> ptrs((size_t)arr.shape(0));
