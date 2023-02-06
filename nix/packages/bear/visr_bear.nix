@@ -6,10 +6,13 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ cmake boost python.buildEnv visr_python ];
   cmakeFlags = [
     "-DBEAR_PACKAGE_AND_INSTALL=false"
-    "-DBEAR_UNIT_TESTS=false"
+    "-DBEAR_UNIT_TESTS=true"
     "-DBEAR_DATA_PATH_DEFAULT=${data_files.default.file}"
     "-DBEAR_DATA_PATH_DEFAULT_SMALL=${data_files.default_small.file}"
     "-DBEAR_SYMLINK_DATA_FILES=true"
   ];
   preConfigure = ''cmakeFlags="$cmakeFlags -DBEAR_PYTHON_SITE_PACKAGES=$out/${python.sitePackages}"'';
+
+  doCheck = true;
+  checkPhase = "make test";
 }
