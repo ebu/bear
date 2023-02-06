@@ -4,8 +4,8 @@ python.pkgs.buildPythonPackage rec {
   src = fetchFromGitHub {
     owner = "ebu";
     repo = "ebu_adm_renderer";
-    rev = "a0e37d33f55ae7080b1aaccbce655680319f92ae";
-    sha256 = "sha256-FelQWGcLJbB6ZnadM0/5hrEhZMVGsssqhaPS4xbO2Ws=";
+    rev = "ef2189021203101eab323e1eccdd2527b32a5024";
+    sha256 = "wkzfmqqnY5Nzw3Rr5kpnpIZ5kuQygUxHidMN9QZEI/Q=";
   };
   propagatedBuildInputs = with python.pkgs; [ numpy scipy six attrs multipledispatch lxml ruamel_yaml setuptools ];
   doCheck = false;
