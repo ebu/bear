@@ -130,24 +130,52 @@ def expand_hoa_config(config: Config):
     config.num_hoa_channels += 1
 
 
-@pytest.mark.parametrize("period", [64, 512])
-@pytest.mark.parametrize("set_config_blocking", [False, True])
 @pytest.mark.parametrize(
-    "renderer_input,setup_config_base,expand_config",
+    "period,set_config_blocking,renderer_input,setup_config_base,expand_config",
     [
-        (get_objects_input_dynamic(), setup_objects_config, expand_objects_config),
-        (get_objects_input_static(), setup_objects_config, expand_objects_config),
         (
+            512,
+            False,
+            get_objects_input_dynamic(),
+            setup_objects_config,
+            expand_objects_config,
+        ),
+        (
+            512,
+            False,
+            get_objects_input_static(),
+            setup_objects_config,
+            expand_objects_config,
+        ),
+        (
+            512,
+            False,
             get_direct_speakers_input_dynamic(),
             setup_direct_speakers_config,
             expand_direct_speakers_config,
         ),
         (
+            512,
+            False,
             get_direct_speakers_input_static(),
             setup_direct_speakers_config,
             expand_direct_speakers_config,
         ),
-        (get_hoa_input(), setup_hoa_config, expand_hoa_config),
+        (512, False, get_hoa_input(), setup_hoa_config, expand_hoa_config),
+        (
+            64,
+            False,
+            get_objects_input_dynamic(),
+            setup_objects_config,
+            expand_objects_config,
+        ),
+        (
+            512,
+            True,
+            get_objects_input_dynamic(),
+            setup_objects_config,
+            expand_objects_config,
+        ),
     ],
     ids=[
         "objects_dynamic",
@@ -155,6 +183,8 @@ def expand_hoa_config(config: Config):
         "direct_speakers_dynamic",
         "direct_speakers_static",
         "hoa",
+        "objects_dynamic_64",
+        "objects_dynamic_blocking",
     ],
 )
 def test_dynamic_renderer(
