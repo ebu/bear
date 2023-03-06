@@ -1,4 +1,6 @@
 #!/bin/bash
+cd $(dirname $0)
+
 find src/ test/ pythonwrappers/ include/ \( -iname '*.cpp' -or -iname '*.hpp' \) \
     -and -not -iname bearmodule.* |
     while read file; do
