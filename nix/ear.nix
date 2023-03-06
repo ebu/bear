@@ -1,12 +1,7 @@
-{ stdenv, python, fetchFromGitHub }:
+{ stdenv, python, fetchFromGitHub, src }:
 python.pkgs.buildPythonPackage rec {
   name = "ear";
-  src = fetchFromGitHub {
-    owner = "ebu";
-    repo = "ebu_adm_renderer";
-    rev = "ef2189021203101eab323e1eccdd2527b32a5024";
-    sha256 = "wkzfmqqnY5Nzw3Rr5kpnpIZ5kuQygUxHidMN9QZEI/Q=";
-  };
+  inherit src;
   propagatedBuildInputs = with python.pkgs; [ numpy scipy six attrs multipledispatch lxml ruamel_yaml setuptools ];
   doCheck = false;
   postPatch = ''

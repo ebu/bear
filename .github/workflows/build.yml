@@ -12,16 +12,14 @@ jobs:
       with:
         submodules: recursive
     - uses: cachix/install-nix-action@v20
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
     - uses: cachix/cachix-action@v12
       with:
         name: ebubear
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
         pushFilter: '(-source$|\.tf$|docker)'
-    - run: nix-build nix -A bear --no-out-link
+    - run: nix build .#bear --no-link
 
-    - run: nix-build nix -A bear_docker -o bear_docker.tar.gz
+    - run: nix build .#bear_docker -o bear_docker.tar.gz
     - uses: actions/upload-artifact@v3
       with:
         name: bear_docker.tar.gz

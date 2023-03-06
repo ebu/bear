@@ -1,0 +1,78 @@
+{
+  "nodes": {
+    "ear_src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1670415759,
+        "narHash": "sha256-wkzfmqqnY5Nzw3Rr5kpnpIZ5kuQygUxHidMN9QZEI/Q=",
+        "ref": "master",
+        "rev": "ef2189021203101eab323e1eccdd2527b32a5024",
+        "revCount": 220,
+        "type": "git",
+        "url": "https://github.com/ebu/ebu_adm_renderer.git"
+      },
+      "original": {
+        "ref": "master",
+        "type": "git",
+        "url": "https://github.com/ebu/ebu_adm_renderer.git"
+      }
+    },
+    "flake-utils": {
+      "locked": {
+        "lastModified": 1676283394,
+        "narHash": "sha256-XX2f9c3iySLCw54rJ/CZs+ZK6IQy7GXNY4nSOyu2QG4=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "3db36a8b464d0c4532ba1c7dda728f4576d6d073",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "libear_src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1683050932,
+        "narHash": "sha256-4Ce1B9Ajuw9K8zy2PVl46DTqae5biPVftDGNCaFedbU=",
+        "ref": "master",
+        "rev": "10e071784d7f033fee8e456032458f10dd1da174",
+        "revCount": 83,
+        "type": "git",
+        "url": "https://github.com/ebu/libear.git"
+      },
+      "original": {
+        "ref": "master",
+        "type": "git",
+        "url": "https://github.com/ebu/libear.git"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1677779205,
+        "narHash": "sha256-6DBjL9wjq86p2GczmwnHtFRnWPBPItc67gapWENBgX8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "96e18717904dfedcd884541e5a92bf9ff632cf39",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-22.11",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "ear_src": "ear_src",
+        "flake-utils": "flake-utils",
+        "libear_src": "libear_src",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
