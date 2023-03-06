@@ -87,6 +87,7 @@ option(BEAR_USE_INTERNAL_LIBEAR
        ON)
 if(NOT BEAR_USE_INTERNAL_LIBEAR)
   find_package(ear REQUIRED)
+  find_package(Eigen3 REQUIRED)
 endif()
 
 find_package(Boost REQUIRED)
