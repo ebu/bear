@@ -124,8 +124,7 @@ class StateMachine {
   const int num_preroll_frames;
 };
 
-class TypeAdapter {
-};
+class TypeAdapter {};
 
 struct ObjectsTypeAdapter {
   static bool input_fits(const ConfigImpl &config, size_t channel, const ObjectsInput &metadata)

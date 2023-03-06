@@ -76,7 +76,7 @@ def test_basic(flow, transform_rotation):
     npt.assert_allclose(new_q, expected_q)
 
 
-s = 0.5 ** 0.5
+s = 0.5**0.5
 
 
 # check that rotations using the listener API correspond with what we expect

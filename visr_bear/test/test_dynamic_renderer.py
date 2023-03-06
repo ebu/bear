@@ -207,7 +207,7 @@ def test_dynamic_renderer(
     def pre_block_cb_common(renderer, frame, period):
         if frame == int((5 * 48000) / period):
             listener = Listener()
-            s = 0.5 ** 0.5
+            s = 0.5**0.5
             listener.orientation_quaternion = (s, 0, -s, 0)
             renderer.set_listener(listener, None)
 
