@@ -76,16 +76,16 @@ if(WIN32) # Covers 64-bit Windows as well
 endif(WIN32)
 
 # Import VISR targets (libraries and include files) - perhaps a flag like
-# USE_INTERNAL_LIBEAR would be more consistent?
+# BEAR_USE_INTERNAL_LIBEAR would be more consistent?
 if(NOT TARGET VISR::visr_${BEAR_VISR_LIB_TYPE})
   message(STATUS "VISR Target not found. Using find_package...")
   find_package(VISR 0.11.0 REQUIRED)
 endif()
 
-option(USE_INTERNAL_LIBEAR
+option(BEAR_USE_INTERNAL_LIBEAR
        "should we use our own version of libear, or find one with find_package?"
        ON)
-if(NOT USE_INTERNAL_LIBEAR)
+if(NOT BEAR_USE_INTERNAL_LIBEAR)
   find_package(ear REQUIRED)
 endif()
 

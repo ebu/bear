@@ -5,7 +5,7 @@ add_library(RapidJSON INTERFACE)
 target_include_directories(
   RapidJSON INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/rapidjson/include)
 
-if(USE_INTERNAL_LIBEAR)
+if(BEAR_USE_INTERNAL_LIBEAR)
   set(EAR_PACKAGE_AND_INSTALL
       ${BEAR_PACKAGE_AND_INSTALL}
       CACHE BOOL "Package and install libear")
