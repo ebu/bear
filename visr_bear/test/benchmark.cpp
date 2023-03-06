@@ -4,8 +4,8 @@
 #include <thread>
 #include <vector>
 
-#include "../submodules/libear/src/hoa/hoa.hpp"
 #include "bear/api.hpp"
+#include "ear_bits/hoa.hpp"
 #include "test_config.h"
 
 #define RAPIDJSON_HAS_STDSTRING 1
@@ -167,7 +167,7 @@ std::vector<double> run_benchmark(const BenchmarkConfig &c)
     for (size_t j = 0; j < c.hoa_channels_per_block; j++) {
       block.channels.push_back(i * c.hoa_channels_per_block + j);
       int n, m;
-      std::tie(n, m) = ear::hoa::from_acn(j);
+      std::tie(n, m) = bear::ear_bits::hoa::from_acn(j);
       block.type_metadata.orders.push_back(n);
       block.type_metadata.degrees.push_back(m);
     }

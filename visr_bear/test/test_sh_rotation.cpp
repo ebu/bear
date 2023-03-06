@@ -1,6 +1,6 @@
-#include "../submodules/libear/src/hoa/hoa.hpp"
-#include "../submodules/libear/tests/eigen_utils.hpp"
 #include "catch2/catch.hpp"
+#include "ear_bits/hoa.hpp"
+#include "eigen_utils.hpp"
 #include "sh_rotation.hpp"
 
 using namespace bear;
@@ -14,8 +14,8 @@ Eigen::VectorXd encode(int order, Eigen::Vector3d pos)
   Eigen::VectorXd res(nch);
   for (size_t acn = 0; acn < nch; acn++) {
     int n, m;
-    std::tie(n, m) = ear::hoa::from_acn(acn);
-    res(acn) = ear::hoa::sph_harm(n, m, az, el, ear::hoa::norm_N3D);
+    std::tie(n, m) = bear::ear_bits::hoa::from_acn(acn);
+    res(acn) = bear::ear_bits::hoa::sph_harm(n, m, az, el, bear::ear_bits::hoa::norm_N3D);
   }
 
   return res;

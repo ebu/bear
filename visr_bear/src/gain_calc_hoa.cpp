@@ -3,14 +3,14 @@
 #include <libvisr/time.hpp>
 #include <map>
 
-#include "../submodules/libear/src/hoa/hoa.hpp"
+#include "ear_bits/hoa.hpp"
 #include "sh_rotation.hpp"
 
 namespace {
-const std::map<std::string, ear::hoa::norm_f_t &> ADM_norm_types{
-    {"N3D", ear::hoa::norm_N3D},
-    {"SN3D", ear::hoa::norm_SN3D},
-    {"FuMa", ear::hoa::norm_FuMa},
+const std::map<std::string, bear::ear_bits::hoa::norm_f_t &> ADM_norm_types{
+    {"N3D", bear::ear_bits::hoa::norm_N3D},
+    {"SN3D", bear::ear_bits::hoa::norm_SN3D},
+    {"FuMa", bear::ear_bits::hoa::norm_FuMa},
 };
 }
 
@@ -53,8 +53,8 @@ void GainCalcHOA::update_for(std::size_t stream, const HOAInput &input)
   if (norm_it == ADM_norm_types.end())
     throw ear::adm_error("unknown normalization type: '" + input.type_metadata.normalization + "'");
 
-  ear::hoa::norm_f_t &norm_from = norm_it->second;
-  ear::hoa::norm_f_t &norm_to = ear::hoa::norm_SN3D;
+  ear_bits::hoa::norm_f_t &norm_from = norm_it->second;
+  ear_bits::hoa::norm_f_t &norm_to = ear_bits::hoa::norm_SN3D;
 
   Time block_end{0, 1};
   bool infinite_block = false;
@@ -69,7 +69,7 @@ void GainCalcHOA::update_for(std::size_t stream, const HOAInput &input)
 
     double convert = norm_to(n, std::abs(m)) / norm_from(n, std::abs(m));
 
-    int acn = ear::hoa::to_acn(n, m);
+    int acn = ear_bits::hoa::to_acn(n, m);
 
     PerChannel &channel = per_channel_data.at(input.channels[i]);
     channel.stream = stream;
