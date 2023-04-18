@@ -183,3 +183,44 @@ def read(f):
     metadata = json.loads(bytes(metadata_bytes).decode("utf8"))
 
     return _unpack_data(metadata, f_bytes)
+
+
+def _main():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+
+    subparsers = parser.add_subparsers(help="sub-command", required=True)
+
+    def show(args):
+        contents = read(args.file)
+
+        def to_json(x):
+            if isinstance(x, dict):
+                return {k: to_json(v) for k, v in x.items()}
+            elif isinstance(x, list):
+                return [to_json(v) for v in x]
+            elif isinstance(x, np.ndarray):
+                if x.size < 100:
+                    return x.tolist()
+                else:
+                    return f"array with shape {x.shape} and type {x.dtype}"
+            else:
+                return x
+
+        import json
+
+        print(json.dumps(to_json(contents), indent=4))
+
+    show_parser = subparsers.add_parser(
+        "show", help="show the contents of a tensorfile"
+    )
+    show_parser.add_argument("file", type=argparse.FileType(mode="rb"))
+    show_parser.set_defaults(func=show)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    _main()

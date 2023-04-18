@@ -1,0 +1,153 @@
+configfile: workflow.source_path("snakemake_config.yaml")
+
+rule extract:
+    input:
+        "sofas/{sofa}.sofa",
+        workflow.source_path("extract.py"),
+    output:
+        "irs/{params}/{sofa}.tf",
+    params:
+        args=lambda w: config["params"][w.params].get("extract_args", ""),
+        input_arg=lambda w: "--hrir-in" if config["params"][w.params].get("hrir", False) else "--brir-in",
+    shell:
+        "python -m bear.process_irs.extract {params.args} {params.input_arg} {input[0]} --tf-out {output[0]}"
+
+rule find_delay_over_view:
+    input:
+        "irs/{params}/{sofa}.tf",
+        workflow.source_path("find_delay_over_view.py"),
+        workflow.source_path("../irs.py"),
+    output:
+        "delays_over_view/{params}/{sofa}.npy",
+    params:
+        args=lambda w: config["params"][w.params].get("find_delay_over_view_args", "")
+    shell:
+        "python -m bear.process_irs.find_delay_over_view {params.args} --tf-in {input[0]} --out {output[0]}"
+
+rule find_global_delays:
+    input:
+        "irs/{params}/{sofa}.tf",
+        lambda w: [] if config["params"][w.params].get("one_view", False) else "delays_over_view/{params}/{sofa}.npy",
+        workflow.source_path("find_global_delays.py"),
+        workflow.source_path("../irs.py"),
+    output:
+        "global_delays/{params}/{sofa}.npy",
+    params:
+        args=lambda w: config["params"][w.params].get("find_global_delays_args", ""),
+        in_delays = lambda w, input: "" if config["params"][w.params].get("one_view", False) else f"--in-delays {input[1]}",
+    shell:
+        "python -m bear.process_irs.find_global_delays {params.args} --tf-in {input[0]} {params.in_delays} --out {output}"
+
+rule finalise:
+    input:
+        "irs/{params}/{sofa}.tf",
+        "global_delays/{params}/{sofa}.npy",
+        workflow.source_path("data/AmbiHOA3_magLS.sofa"),
+        workflow.source_path("finalise.py"),
+        workflow.source_path("../irs.py"),
+    output:
+        "bear_data/{params}/{sofa}.tf",
+        "finalise_extra/{params}/{sofa}.tf",
+    params:
+        args=lambda w: config["params"][w.params].get("finalise_args", "")
+    shell:
+        "python -m bear.process_irs.finalise {params.args} --tf-in {input[0]} --delays {input[1]} --tf-out {output[0]} --hoa-decoder {input[2]} --extra-out {output[1]}"
+
+rule report:
+    input:
+        "bear_data/{params}/{sofa}.tf",
+        "global_delays/{params}/{sofa}.npy",
+        "finalise_extra/{params}/{sofa}.tf",
+        lambda w: [] if config["params"][w.params].get("one_view", False) else "delays_over_view/{params}/{sofa}.npy",
+        workflow.source_path("report.py"),
+        workflow.source_path("../irs.py"),
+    output:
+        "reports/{params}/{sofa}.pdf",
+    params:
+        args=lambda w: config["params"][w.params].get("report_args", ""),
+        in_delays = lambda w, input: "" if config["params"][w.params].get("one_view", False) else f"--in-delays {input[3]}",
+    shell:
+        "python -m bear.process_irs.report {params.args} --tf-in {input[0]} --extra-in {input[2]} {params.in_delays} --in-merged-delays {input[1]} --out {output}"
+
+
+# test files
+
+rule pink:
+    output:
+        "test_files/samples/pink.wav",
+    shell:
+        "sox -R -n {output[0]} synth 15.5 pinknoise gain -2.55 highpass 100"
+
+rule rotation_file:
+    input:
+        "test_files/samples/{sample}.wav",
+    output:
+        "test_files/adms/{sample}/rotation_el_{el}_diffuse_{diffuse}.wav",
+    shell:
+        "python -m bear.test_files.make_rotation --elevation {wildcards.el} --diffuse {wildcards.diffuse} {input[0]} {output[0]}"
+
+rule render:
+    input:
+        adm="test_files/adms/{sample}/{adm}.wav",
+        tf="{tf}.tf",
+    output:
+        "test_files/rendered/{sample}/{adm}/bear/{tf}.wav",
+    shell:
+        "python -m bear.render_cli -c --output-gain-db -4 --bear-data {input.tf} {input.adm} {output[0]}"
+
+rule ear_render:
+    input:
+        adm="test_files/adms/{sample}/{adm}.wav",
+    output:
+        "test_files/rendered/{sample}/{adm}/ear.wav",
+    shell:
+        "python -m ear.cmdline.render_file -c --output-gain-db -4 -s 0+2+0 {input.adm} {output[0]}"
+
+
+SAMPLES = [
+    "pink",
+    "27",
+]
+
+ADMS = [
+    "rotation_el_0_diffuse_0",
+]
+
+NEW_TFS = [
+    "hrir/HRIR_FULL2DEG",
+    "hrir/sadie-d1-hrir",
+    "brir-one-view/bbcrdlr_all_speakers",
+    "brir/bbcrdlr_all_speakers",
+    "brir-one-view-nowin/bbcrdlr_all_speakers",
+    "brir-one-view-exponential/bbcrdlr_all_speakers",
+]
+
+TFS = expand("bear_data/{tf}", tf=NEW_TFS) + [
+    "old_data/default_small",
+]
+
+SYSTEMS = expand("bear/{tf}", tf=TFS) + ["ear"]
+
+rule norm:
+    input:
+        expand(
+            "test_files/rendered/{{sample}}/{{adm}}/{system}.wav",
+            system=SYSTEMS,
+        ),
+    output:
+        expand(
+            "test_files/normalised/{{sample}}/{{adm}}/{system}.wav",
+            system=SYSTEMS,
+        ),
+    shell:
+        "python -m bear.test_files.normalize {input} - {output}"
+
+rule all:
+    input:
+        expand(
+            "test_files/normalised/{sample}/{adm}/{system}.wav",
+            sample=SAMPLES,
+            adm=ADMS,
+            system=SYSTEMS,
+        ),
+        expand("reports/{tf}.pdf", tf=NEW_TFS),

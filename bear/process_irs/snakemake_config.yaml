@@ -1,0 +1,21 @@
+params:
+  brir:
+    extract_args: "--ir-selection-algo closest"
+  brir-fast:
+    extract_args: "--ir-selection-algo closest --num-views 60 --layout 4+5+0"
+    find_delay_over_view_args: "--default-schedule --opt-steps 10000"
+  brir-one-view:
+    extract_args: "--ir-selection-algo closest --num-views 1"
+    one_view: true
+  brir-one-view-nowin:
+    extract_args: "--ir-selection-algo closest --num-views 1"
+    finalise_args: "--window none"
+    one_view: true
+  brir-one-view-exponential:
+    extract_args: "--ir-selection-algo closest --num-views 1"
+    finalise_args: "--window exponential"
+    one_view: true
+  hrir:
+    one_view: true
+    hrir: true
+    finalise_args: "--window none"
