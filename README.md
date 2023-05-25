@@ -1,6 +1,7 @@
 # Binaural EBU ADM Renderer (BEAR)
 
-The BEAR is a binaural renderer for ADM content. It is based on the [EAR], and is is integrated into the [EAR Production Suite].
+The BEAR is a binaural renderer for ADM content, as specified in [EBU Tech 3396].
+It is based on the [EAR], and is is integrated into the [EAR Production Suite].
 
 This repository contains:
 
@@ -13,6 +14,7 @@ This repository contains:
 
 This is currently a pre-release, awaiting code to generate the data files from publicly-available data and an EBU tech-doc describing the processing performed by the BEAR.
 
+[EBU Tech 3396]: https://tech.ebu.ch/publications/tech3396
 [EAR]: https://github.com/ebu/ebu_adm_renderer
 [libear]: https://github.com/ebu/libear
 [VISR]: https://github.com/s3a-spatialaudio/VISR
