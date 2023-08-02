@@ -9,8 +9,6 @@ def get_path(file_url):
     `resource:PATH`: load from package resource PATH
     `PATH`: same as `file:PATH`
     """
-    scheme, path = file_url.split(":", 1)
-
     if file_url.startswith("resource:"):
         path = file_url.split(":", 1)[1]
 
