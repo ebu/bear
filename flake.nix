@@ -49,6 +49,9 @@
             visr_bear = pkgs.callPackage ./nix/visr_bear.nix { inherit python data_files libear visr_python; src = visr_bear_src; };
             bear = pkgs.callPackage ./nix/bear.nix { inherit python src visr_bear ear numpy_quaternion visr_python; };
             bear_docker = pkgs.callPackage ./nix/bear_docker.nix { inherit ear bear; };
+
+            # same as bear, but without the VISR module
+            bear_no_visr = pkgs.callPackage ./nix/bear.nix { inherit python src ear numpy_quaternion; };
           } // {
             # for checking source filter
             src = pkgs.runCommand "src" { } "cp -r ${src} $out";
