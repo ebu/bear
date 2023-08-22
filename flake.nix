@@ -32,6 +32,16 @@
             src = ./.;
           };
           visr_bear_src = ./visr_bear;
+
+          nix_tools = [
+            pkgs.nixpkgs-fmt
+          ];
+          cpp_tools = [
+            pkgs.clang-tools
+            pkgs.cmake-format
+          ];
+          python_tools = [ pkgs.black python.pkgs.flake8 ];
+          dsp_tools = with python.pkgs; [ h5py scipy dask distributed matplotlib simanneal cvxpy pkgs.snakemake ];
         in
         rec {
           packages = rec {
@@ -59,11 +69,15 @@
 
           devShells = rec {
             visr_bear = packages.visr_bear.overrideAttrs (attrs: {
-              nativeBuildInputs = attrs.nativeBuildInputs ++ [
-                pkgs.clang-tools
-                pkgs.cmake-format
-                pkgs.black
-              ];
+              nativeBuildInputs = attrs.nativeBuildInputs ++ nix_tools ++ cpp_tools ++ python_tools;
+            });
+
+            bear = packages.bear.overrideAttrs (attrs: {
+              nativeBuildInputs = attrs.nativeBuildInputs ++ nix_tools ++ cpp_tools ++ python_tools;
+            });
+
+            bear_dsp = bear.overrideAttrs (attrs: {
+              nativeBuildInputs = attrs.nativeBuildInputs ++ dsp_tools;
             });
           };
         });
