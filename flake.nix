@@ -39,9 +39,14 @@
           cpp_tools = [
             pkgs.clang-tools
             pkgs.cmake-format
+            pkgs.gdb
           ];
           python_tools = [ pkgs.black python.pkgs.flake8 ];
-          dsp_tools = with python.pkgs; [ h5py scipy dask distributed matplotlib simanneal cvxpy pkgs.snakemake ];
+          dsp_tools = with python.pkgs; [
+            h5py scipy dask distributed matplotlib simanneal cvxpy soundfile
+            pkgs.snakemake pkgs.sox
+            self.packages.${system}.pyloudnorm
+          ];
         in
         rec {
           packages = rec {
@@ -49,6 +54,7 @@
 
             numpy_quaternion = pkgs.callPackage ./nix/numpy_quaternion.nix { inherit python; };
             xsimd = pkgs.callPackage ./nix/xsimd.nix { };
+            pyloudnorm = pkgs.callPackage ./nix/pyloudnorm.nix { inherit python; };
 
             ear = pkgs.callPackage ./nix/ear.nix { inherit python; src = ear_src; };
             libear = pkgs.callPackage ./nix/libear.nix { inherit xsimd; src = libear_src; };
