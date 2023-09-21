@@ -46,6 +46,7 @@
             h5py scipy dask distributed matplotlib simanneal cvxpy soundfile
             pkgs.snakemake pkgs.sox
             self.packages.${system}.pyloudnorm
+            jupyter
           ];
         in
         rec {
