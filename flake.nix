@@ -85,6 +85,9 @@
 
             bear_dsp = bear.overrideAttrs (attrs: {
               nativeBuildInputs = attrs.nativeBuildInputs ++ dsp_tools;
+              postShellHook = ''
+                export PYTHONPATH=$(pwd):$PYTHONPATH
+              '';
             });
           };
         });
