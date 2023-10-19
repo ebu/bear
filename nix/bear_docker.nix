@@ -3,7 +3,7 @@ dockerTools.buildImage {
   name = "bear";
   tag = "latest";
   created = "now";
-  contents = [ ear bear ];
+  copyToRoot = [ ear bear ];
 
   config.Cmd = [ "bin/bear-render" ];
 }
