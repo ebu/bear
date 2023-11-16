@@ -1,3 +1,6 @@
+#include <array>
+#include <vector>
+
 #include "bear/api.hpp"
 #include "bear/variable_block_size.hpp"
 #include "catch2/catch.hpp"
