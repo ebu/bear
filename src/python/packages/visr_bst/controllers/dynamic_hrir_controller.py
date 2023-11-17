@@ -207,7 +207,7 @@ class DynamicHrirController( visr.AtomicComponent ):
     def process( self ):
         if self.useHeadTracking and self.trackingInputProtocol.changed():
             htrack = self.trackingInputProtocol.data()
-            ypr = htrack.orientation
+            ypr = htrack.orientationYPR
             # np.negative is to obtain the opposite rotation of the head rotation, i.e. the inverse matrix of head rotation matrix
             self.rotationMatrix = np.asarray( calcRotationMatrix(np.negative(ypr) ), dtype=np.float32 )
             self.trackingInputProtocol.resetChanged()

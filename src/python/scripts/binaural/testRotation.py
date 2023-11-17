@@ -27,7 +27,7 @@ for blockIdx in range(0,numPos):
     flow.process()
     
     if orientation.changed():
-       print( calcRotationMatrix(np.array(orientation.data().orientation)))
+       print( calcRotationMatrix(np.array(orientation.data().orientationYPR)))
        orientation.resetChanged()
 
 

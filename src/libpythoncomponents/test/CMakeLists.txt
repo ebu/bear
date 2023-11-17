@@ -23,7 +23,7 @@ endif( NOT Boost_USE_STATIC_LIBS )
 target_compile_definitions( ${APPLICATION_NAME} PRIVATE -DBOOST_ALL_NO_LIB )
 
 # Since the 'wrapper' unit tests require the visr Python external, ensure that it is compiled
-add_dependencies( ${APPLICATION_NAME} visrpython )
+add_dependencies( ${APPLICATION_NAME} visrpython eflpython pmlpython rbblpython objectmodelpython )
 
 # Encode the current source location to give access to the Python code contained in the test/python directory.
 target_compile_definitions( ${APPLICATION_NAME} PRIVATE CMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
@@ -40,7 +40,7 @@ add_test(NAME ${APPLICATION_NAME} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_binaries/${APPLICATION_NAME} )
 
 include( adjust_test_environment )
-adjustPythonTestEnvironment( ${APPLICATION_NAME} visrpython )
+adjustTestEnvironment( ${APPLICATION_NAME} )
 
 # The PYTHONHOME environment variable must be set in order to let the Python
 # interpreter embedded in the unit test binary start the correct interpreter,

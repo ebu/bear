@@ -34,5 +34,8 @@
 # including download, setup and usage instructions, can be found on the VISR project page
 # http://cvssp.org/data/s3a/public/VISR .
 
+from .hdm_tracker import HdMTracker
+from .hdm_tracker_with_udp_calibration_trigger import HdMTrackerWithUdpCalibrationTrigger
+
 from .razor_ahrs import RazorAHRS
 from .razor_ahrs_with_udp_calibration_trigger import RazorAHRSWithUdpCalibrationTrigger

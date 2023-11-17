@@ -10,7 +10,8 @@
 #include <boost/algorithm/string/trim.hpp>
 
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix/bind/bind_function.hpp>
+#include <boost/phoenix/bind/bind_member_function.hpp>
 
 #include <algorithm>
 #include <ciso646>

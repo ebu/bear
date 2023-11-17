@@ -5,6 +5,7 @@
 
 # VISR Binaural Synthesis Toolkit (BST)
 # Authors: Andreas Franck and Giacomo Costantini
+# Authors: Tracking scripts edits by Jacob Hollebon
 # Project page: http://cvssp.org/data/s3a/public/BinauralSynthesisToolkit/
 
 
@@ -39,9 +40,12 @@ import pml
 
 import numpy as np
 
-from ..util.rotation_functions import deg2rad
+#from ..util.rotation_functions import deg2rad
 
-class RazorAHRS(visr.AtomicComponent ):
+from squaternion import Quaternion
+from visr_bst.util.rotation_functions import deg2rad
+
+class HdMTracker(visr.AtomicComponent ):
     """
     Component to receive tracking data from a Razor AHRS device through a serial port.
     """
@@ -51,10 +55,9 @@ class RazorAHRS(visr.AtomicComponent ):
                   yawOffset=0,
                   pitchOffset=0,
                   rollOffset=0,
-                  yawRightHand=False,
-                  pitchRightHand=False,
-                  rollRightHand=False,
-                  calibrationInput = False # Whether to instantiate an input port to set the orientation.
+                  yprTranslation=None,
+                  calibrationInput = False, # Whether to instantiate an input port to set the orientation.
+                  displayPos = True,
                   ):
         """
         Constructor.
@@ -74,32 +77,24 @@ class RazorAHRS(visr.AtomicComponent ):
             Offset for the pitch value, in degree
         rollOffset : float:
             Initial value for the roll component, default 0.0
-        yawRightHand: bool
-            Whehther the yaw coordinate is interpreted as right-hand
-            (mathematically negative) rotation. Default: False
-        pitchRightHand: bool
-            Whehther the pitch coordinate is interpreted as right-hand
-            (mathematically negative) rotation. Default: False
-        rollRightHand: bool
-            Whehther the roll coordinate is interpreted as right-hand
-            (mathematically negative) rotation. Default: False
+        yprTranslation: array-like, default None
+            3x3 matrix to translate the input YPR orientation 
         calibrationInput: bool
             Flag to determine whehter the component has an additional input "calibration"
             that resets the orientation offsets. At the moment, this input is of
             type StringParameter, and the value is ignored.
+        displayPos : bool
+            wheter to print to the terminal the position of the headtracker
 
         TODO: Check whether to support ListenerPosition objects as calibration triggers
         to set the orientation to an arbitrary value
         """
 
-        super( RazorAHRS, self ).__init__( context, name, parent )
 
-        # Import pyserial within the ctor instead of in the module header to
-        # avoid a dependency of the complete visr_bst package unless we actually
-        # use this tracker.
-        import serial
+        import serial # Import only when a tracker is actually created.
 
-        self.yprVec = np.zeros( 3, dtype = np.float32 )
+        super( HdMTracker, self ).__init__( context, name, parent )
+        self.yprVec =   np.zeros( 3, dtype = np.float32 )
         baudRate = 57600
         self.ser = serial.Serial(port, baudRate, timeout=0)
         self.message = ""
@@ -122,80 +117,83 @@ class RazorAHRS(visr.AtomicComponent ):
         self.parsedN = 0
         self.ser.read() #necessary for the .in_waiting to work
         self.procN =0
-        self.yawOffset = yawOffset
-        self.pitchOffset = pitchOffset
-        self.rollOffset = rollOffset
-        self.yawRightHand = yawRightHand
-        self.pitchRightHand = pitchRightHand
-        self.rollRightHand= rollRightHand
+        self.yprOffset = np.array([yawOffset, pitchOffset, rollOffset], dtype=float)
+        print("yprTranslation:", yprTranslation)
+        if yprTranslation is None:
+            self.yprTranslation = np.eye(3, 3, dtype=float)
+        else:
+            self.yprTranslation = np.array(yprTranslation)
+        if self.yprTranslation.shape != (3, 3):
+            raise ValueError("'yprTranslation must be a 3x3 matrix")
         self.orientationYPR = np.array( [0.0, 0.0, 0.0 ] ) # Current orientation, unadjusted, in radian
-
+        self.displayPos = displayPos
+        
     def send_data(self,newdata):
         data = newdata
-        data = data.replace("#","").replace("Y","").replace("P","").replace("R","").replace("=","").rstrip()
+        data = data.replace(" ","").replace(";","").rstrip()
         try:
-          yprvec = [float(i) for i in data.split(',')]
-          if self.yawRightHand:
-#              print(ypr.orientationYPR[0])
-              yprvec[0]*= -1
-#              print(ypr.orientationYPR[0])
-          if self.pitchRightHand:
-              yprvec[1]*= -1
-          if self.rollRightHand:
-              yprvec[2]*= -1
+          quartvec = [float(i) for i in data.split(',')] # Readout from the tracker is in quaternions
+          q = Quaternion(quartvec[0],quartvec[1],quartvec[2],quartvec[3]) 
+          yprVecRaw = list(q.to_euler(degrees=True)) # Convert to Euler angles, outputs RPY
+          #   yprvec[0], yprvec[2] = yprvec[2], yprvec[0] # Switch to VISR format YPR
+          #   yprvec[0] *= -1; yprvec[1] *= -1; yprvec[2] *= -1;
+          yprVec = self.yprTranslation @ yprVecRaw + self.yprOffset
+          
+          if np.array(yprVec).size != 3:
+            raise ValueError( 'yaw pitch roll bad format:'+str(np.array(yprVec)))
 
-          if np.array(yprvec).size != 3:
-            raise ValueError( 'yaw pitch roll bad format:'+str(np.array(yprvec)))
-
-          self.orientationYPR = yprvec # Store the current position
-
+          self.orientationYPR = yprVec # Store the current position
+#          print(yprvec)
+          
           ypr = self.trackingOutput.protocolOutput().data()
 
 
           # [deg2rad(yprvec[0]+self.yawOffset),deg2rad(yprvec[1]+self.pitchOffset),deg2rad(yprvec[2]+self.rollOffset)]
 
-          ypr.orientationYPR = [deg2rad(self.orientationYPR[0] + self.yawOffset),
-                             deg2rad(self.orientationYPR[1] + self.pitchOffset),
-                             deg2rad(self.orientationYPR[2] + self.rollOffset)]
+          ypr.orientationYPR = [deg2rad(self.orientationYPR[0]),
+                                deg2rad(self.orientationYPR[1]),
+                                deg2rad(self.orientationYPR[2])]
 
           self.sentN = self.sentN+1
 #          print("%d serial parsing %f sec"%(self.procN,time.time()-self.start))
-#          print("[%d,%d,%d]"%(yprvec[0]+self.yawOffset,yprvec[1]+self.pitchOffset,yprvec[2]+self.rollOffset))
+          if self.displayPos:
+              print("\r" + "[%d,%d,%d]"%(yprVec[0],yprVec[1],yprVec[2]), end="")
           self.trackingOutput.protocolOutput().swapBuffers()
 
         except ValueError:
-          print ("Parsing went wrong because of a wrongly formatted string...")
+          print ("Tracker parsing went wrong because of a wrongly formatted string...")
+          print (str(data))
 
 
     def parse_message (self, read):
-         last = read.rfind("\r\n")
+         last = read.rfind(";")
          if last == -1:
               self.message+=read
               #print(" no endl: "+repr(self.message))
          else:
-             ndlast = read.rfind("\r\n", 0, last)
+             ndlast = read.rfind(";", 0, last)
              if ndlast == -1:
                  #print(" just one endl bef: "+repr(self.message))
-                 self.message+= read[:last+2]
+                 self.message+= read[:last+1]
                  #print(" just one endl: "+repr(self.message))
-                 if self.message.count('\r\n') >= 2:
-                         lastM = self.message.rfind("\r\n")
-                         ndlastM = self.message.rfind("\r\n", 0, lastM)
-                         lastN = self.message[ndlastM+2:lastM].rfind("\n")
-                         lastR = self.message[ndlastM+2:lastM].rfind("\r")
+                 if self.message.count(';') >= 1:
+                         lastM = self.message.rfind(";")
+                         ndlastM = self.message.rfind(";", 0, lastM)
+                         lastN = self.message[ndlastM+1:lastM].rfind(";")
+#                         lastR = self.message[ndlastM+2:lastM].rfind("\r")
                          if lastN != -1:
                              ndlastM = lastN
-                         if lastR != -1:
-                             ndlastM = lastR
-                         #print(" message sent: "+repr(self.message[ndlastM+2:lastM+2]))
-                         self.send_data(self.message[ndlastM+2:lastM+2])
+#                         if lastR != -1:
+#                             ndlastM = lastR
+#                         print(" message sent: "+repr(self.message[ndlastM+2:lastM+2]))
+                         self.send_data(self.message[ndlastM+1:lastM+1])
                          self.message = read[last:]
                  else:
-                    self.message+= read[last+2:]
+                    self.message+= read[last+1:]
                     #print(" not sent: "+repr(self.message))
              else:
-                  #print(" message sent: "+repr(read[ndlast+2:last+2]))#+" ( in mem "+repr(read[last:])+" ) over total "+(repr(read)))
-                  self.send_data(read[ndlast+2:last+2])
+#                  print(" message sent: "+repr(read[ndlast+2:last+2]))#+" ( in mem "+repr(read[last:])+" ) over total "+(repr(read)))
+                  self.send_data(read[ndlast+1:last+1])
                   self.sent = True
                   self.message = read[last:]
          self.parsedN = self.parsedN+1
@@ -206,10 +204,9 @@ class RazorAHRS(visr.AtomicComponent ):
             if not calInputProtocol.empty():
                 # We are not interested in the content, but just use it as a trigger to use the
                 # most recent orientation to set the compensation values.
-                self.yawOffset = - self.orientationYPR[0]
-                self.pitchOffset = - self.orientationYPR[1]
-                self.rollOffset = - self.orientationYPR[2]
+                self.yprOffset = - self.orientationYPR
                 calInputProtocol.clear()
+                print('HdM Calibrated!')
 
         self.procN=self.procN+1
         inBuffer = self.ser.in_waiting
@@ -225,3 +222,4 @@ class RazorAHRS(visr.AtomicComponent ):
                     self.parse_message(read)
             except BaseException as ex:
                 print( "Error while decoding tracking data message: %s" % str(ex) )
+

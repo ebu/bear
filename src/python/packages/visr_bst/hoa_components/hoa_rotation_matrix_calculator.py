@@ -114,7 +114,7 @@ class HoaRotationMatrixCalculator( visr.AtomicComponent ):
         """
         if (self.orientationInputProtocol is not None ) and self.orientationInputProtocol.changed():
             head = self.orientationInputProtocol.data()
-            ypr = - np.array(head.orientation, dtype = np.float32 ) # negative because we rotate the sound field in the opposite
+            ypr = - np.array(head.orientationYPR, dtype = np.float32 ) # negative because we rotate the sound field in the opposite
             # direction of the head orientation.
             R1 = rotationMatrixReorderingACN( calcRotationMatrix(ypr) )
             self.rotationMatrices = allSphericalHarmonicsRotationMatrices( self.hoaOrder, R1 )

@@ -32,7 +32,7 @@ namespace
         {
           return new BiquadCoefficient<CoeffType>( val[0], val[1], val[2], val[3], val[4] );
         }), py::arg( "val" ) )
-      .def_property_readonly_static( "numberOfCoefficients", []( BiquadCoefficient<CoeffType> const & )
+      .def_property_readonly_static( "numberOfCoefficients", []( py::object /*self*/ )
       {
         return BiquadCoefficient<CoeffType>::cNumberOfCoeffs;
       } )
@@ -76,7 +76,16 @@ namespace
       } )
       .def( "writeJson", []( BiquadCoefficient<CoeffType> & self ){ std::string jsonRep; self.writeJson( jsonRep ); return jsonRep; } )
       .def( "writeXml", []( BiquadCoefficient<CoeffType> & self ) { std::string xmlRep; self.writeXml( xmlRep ); return xmlRep; } )
-    ;
+      .def( "__str__",
+              []( BiquadCoefficient< CoeffType > & self )
+              {
+                std::stringstream str;
+                str << "b0: " << self.b0() << " b1: " << self.b1()
+                    << " b2: " << self.b2() << " a1: " << self.a1()
+                    << " a2: " << self.a2();
+                return str.str();
+              } )
+      ;
   }
 
   template< typename CoeffType >
@@ -96,11 +105,12 @@ namespace
             inst->at(idx) = vec[idx];
           }
           return inst;
-        } ), py::arg( "initList" ), "Constructor from coefficient vector" )
+        } ), py::arg( "initList" ), "Constructor from list of biquads" )
       .def_static( "fromJson", []( std::string const & str ){ return BiquadCoefficientList<CoeffType>::fromJson( str ); } )
       .def_static( "fromXml", []( std::string const & str ){ return BiquadCoefficientList<CoeffType>::fromXml( str ); } )
       .def_property( "size", &BiquadCoefficientList<CoeffType>::size, &BiquadCoefficientList<CoeffType>::size )
       .def( "resize", &BiquadCoefficientList<CoeffType>::size )
+      .def( "__len__", &BiquadCoefficientList<CoeffType>::size )
       .def( "__setitem__", []( BiquadCoefficientList<CoeffType> & self, std::size_t idx, BiquadCoefficient<CoeffType> const & val ){ self.at(idx) = val; } )
       .def( "__getitem__", static_cast<BiquadCoefficient<CoeffType> const &(BiquadCoefficientList<CoeffType>::*)(std::size_t)const>(&BiquadCoefficientList<CoeffType>::at ) )
       .def( "__iter__", []( BiquadCoefficientList<CoeffType> & lst ){ return py::make_iterator( lst.begin(), lst.end()); } ) 

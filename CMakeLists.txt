@@ -96,7 +96,7 @@ endif( VISR_SYSTEM_NAME MATCHES "Darwin" )
 # Allow disabling of setting rpath - parent projects may want to customise it, based on installation
 OPTION( AUTOSET_RPATH "Automatically set rpath" ON )
 if(AUTOSET_RPATH)
-  
+
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/3rd;${CMAKE_INSTALL_PREFIX}/lib")
 
   # Activate rpath support
@@ -509,11 +509,11 @@ if( BUILD_USE_SNDFILE_LIBRARY AND (VISR_SYSTEM_NAME MATCHES "MacOS") )
   find_package(OggVorbis REQUIRED)
 endif( BUILD_USE_SNDFILE_LIBRARY AND (VISR_SYSTEM_NAME MATCHES "MacOS") )
 
+# Note: Disabled installation to ${PYTHON_SITE_PACKAGES}, because this
+# prohibits the creation of installer packages.
 if( BUILD_PYTHON_BINDINGS )
-  set( PYTHON_MODULE_INSTALL_DIRECTORY "${PYTHON_SITE_PACKAGES}" )
-else( BUILD_PYTHON_BINDINGS )
-  # this sometimes gets used if BUILD_PYTHON_BINDINGS is not set
-  set( PYTHON_MODULE_INSTALL_DIRECTORY "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" )
+  set( PYTHON_MODULE_INSTALL_DIRECTORY
+  "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" )
 endif( BUILD_PYTHON_BINDINGS )
 set( DOCUMENTATION_INSTALL_DIRECTORY "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/doc" )
 

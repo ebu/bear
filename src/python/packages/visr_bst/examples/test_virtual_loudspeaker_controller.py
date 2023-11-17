@@ -143,7 +143,7 @@ print(hrirData.shape)
 ##          headrotation =  np.pi
 #          headrotation =  azSequence[int(blockIdx%numPos)]
 ##          print("it num"+str(blockIdx)+" head rotation: "+str(rad2deg(headrotation)))
-#          trackingInput.data().orientation = [headrotation,0,0] #rotates over the z axis, that means that the rotation is on the xy plane
+#          trackingInput.data().orientationYPR = [headrotation,0,0] #rotates over the z axis, that means that the rotation is on the xy plane
 #          trackingInput.swapBuffers()                
 #    inputBlock = inputSignal[:, blockIdx*blockSize:(blockIdx+1)*blockSize]
 #    outputBlock = flow.process( inputBlock )

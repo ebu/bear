@@ -10,7 +10,7 @@ def referenceGainScalar( sigLen, initialGain, transitions ):
     """
     Internal function to compute the gain trajectory for an arbitra
     """
-    out = np.full( sigLen, initialGain, dtype=np.float )
+    out = np.full(sigLen, initialGain, dtype=np.float32)
     currGain = initialGain
     for trans in transitions:
         start = trans["s"]

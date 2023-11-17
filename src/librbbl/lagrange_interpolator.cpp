@@ -71,9 +71,11 @@ void LagrangeInterpolator<SampleType, order>::interpolate( SampleType const * ba
     SampleType delay = mDelays[sampleIdx];
     // does the same thing as std::round, minus some edge cases that aren't
     // important to us
-    std::ptrdiff_t baseOffset = delay > 0
-                                     ? delay + static_cast<SampleType>(0.5)
-                                     : delay - static_cast<SampleType>(0.5);
+    std::ptrdiff_t baseOffset =
+        delay > 0 ? static_cast< std::ptrdiff_t >(
+                        delay + static_cast< SampleType >( 0.5 ) )
+                  : static_cast< ptrdiff_t >(
+                        delay - static_cast< SampleType >( 0.5 ) );
     SampleType intersamplePosition = delay - baseOffset;
 
     mCoeffCalculator.calculateCoefficients( intersamplePosition,

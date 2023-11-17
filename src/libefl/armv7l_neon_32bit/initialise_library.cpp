@@ -4,7 +4,7 @@
 
 #include "vector_functions.hpp"
 
-#include "../vector_functions_reference.hpp"
+#include "../reference/vector_functions.hpp"
 
 namespace visr
 {

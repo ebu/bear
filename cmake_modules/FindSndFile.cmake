@@ -39,6 +39,7 @@ else (SndFile_LIBRARIES AND SndFile_INCLUDE_DIRS)
 
   find_library(SndFile_LIBRARY
     NAMES
+      libsndfile libsndfile-1
       sndfile sndfile-1
     PATHS
       /usr/lib

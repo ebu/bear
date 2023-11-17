@@ -1,6 +1,7 @@
 # Python bindings for the main VISR interface classes
 
 set( SOURCES
+biquad_coefficient_parameter.cpp
 double_buffering_protocol.cpp
 empty_parameter_config.cpp
 indexed_value_parameter.cpp

@@ -133,7 +133,7 @@ for blockIdx in range(0,numBlocks):
     if blockIdx % (parameterUpdatePeriod/blockSize) == 0:
         if useTracking:
           headrotation =  azSequence[int(blockIdx%numPos)]
-          trackingInput.data().orientation = [headrotation,0,0] #rotates over the z axis, that means that the rotation is on the xy plane
+          trackingInput.data().orientationYPR = [headrotation,0,0] #rotates over the z axis, that means that the rotation is on the xy plane
           trackingInput.swapBuffers()
     inputBlock = inputSignal[:, blockIdx*blockSize:(blockIdx+1)*blockSize]
     outputBlock = flow.process( inputBlock )

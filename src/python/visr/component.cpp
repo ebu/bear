@@ -72,22 +72,30 @@ void exportComponent( pybind11::module& m )
     .def( "audioPort", static_cast<AudioPortBase&(Component::*)(std::string const &)>(&Component::audioPort), pybind11::arg("portName"), "Return an audio port object by name", pybind11::return_value_policy::reference )
     .def( "parameterPort", static_cast<ParameterPortBase&(Component::*)(std::string const &)>(&Component::parameterPort), pybind11::arg( "portName" ), "Return a parameter port object by name", pybind11::return_value_policy::reference )
     .def( "status", static_cast<void(Component::*)(::visr::StatusMessage::Kind, char const*)>(&Component::status), pybind11::arg("statusId"), pybind11::arg("message") )
-    .def_property_readonly( "audioPorts",
-      []( Component & comp )
-      {
-        impl::ComponentImplementation::AudioPortContainer & portList = comp.implementation().audioPorts();
-        PortIterator<impl::ComponentImplementation::AudioPortContainer> beginIt{ portList.begin() };
-        PortIterator<impl::ComponentImplementation::AudioPortContainer> endIt{ portList.end() };
-        return pybind11::make_iterator( beginIt, endIt );
-      }, "Return an iterator over the audio ports of this component." )
-    .def_property_readonly( "parameterPorts",
-      []( Component & comp )
-      {
-        impl::ComponentImplementation::ParameterPortContainer & portList = comp.implementation().parameterPorts();
-        PortIterator<impl::ComponentImplementation::ParameterPortContainer> beginIt{ portList.begin() };
-        PortIterator<impl::ComponentImplementation::ParameterPortContainer> endIt{ portList.end() };
-        return pybind11::make_iterator( beginIt, endIt );
-      }, "Return an iterator over the parameter ports of this component." )
+      .def_property_readonly(
+          "audioPorts",
+          []( Component & comp )
+          {
+            impl::ComponentImplementation::AudioPortContainer & portList =
+                comp.implementation().audioPorts();
+            using IterWrapper = PortIterator<
+                impl::ComponentImplementation::AudioPortContainer >;
+            return pybind11::make_iterator( IterWrapper{ portList.begin() },
+                                            IterWrapper{ portList.end() } );
+          },
+          "Return an iterator over the audio ports of this component." )
+      .def_property_readonly(
+          "parameterPorts",
+          []( Component & comp )
+          {
+            impl::ComponentImplementation::ParameterPortContainer & portList =
+                comp.implementation().parameterPorts();
+            using IterWrapper = PortIterator<
+                impl::ComponentImplementation::ParameterPortContainer >;
+            return pybind11::make_iterator( IterWrapper{ portList.begin() },
+                                            IterWrapper{ portList.end() } );
+          },
+          "Return an iterator over the parameter ports of this component." )
     ;
 }
 

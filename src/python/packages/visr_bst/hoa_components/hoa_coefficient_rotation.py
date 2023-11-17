@@ -107,7 +107,7 @@ class HoaCoefficientRotation( visr.AtomicComponent ):
         """
         if self.trackingInputProtocol.changed():
             head = self.trackingInputProtocol.data()
-            ypr = - np.array(head.orientation, dtype = np.float32 ) # negative because we rotate the sound field in the opposite
+            ypr = - np.array(head.orientationYPR, dtype = np.float32 ) # negative because we rotate the sound field in the opposite
             # direction of the head orientation.
             R1 = rotationMatrixReorderingACN( calcRotationMatrix(ypr) )
             self.rotationMatrices = allSphericalHarmonicsRotationMatrices( self.hoaOrder, R1 )

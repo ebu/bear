@@ -15,6 +15,19 @@ function(fix_rpath libpath )
   execute_process(COMMAND ${EXECUTE_COMMAND} RESULT_VARIABLE rv)
 endfunction()
 
+function( fixLibraryTarget target )
+  get_target_property( LIBLOCATION ${target} IMPORTED_LOCATION )
+  message( STATUS "fixLibraryTarget: " ${target} " liblocation: " ${LIBLOCATION} )
+  get_filename_component( LIBREALPATH ${LIBLOCATION} REALPATH)
+  fix_rpath( LIBREALPATH )
+  get_filename_component( LIBNAME ${LIBREALPATH} NAME )
+  set( ADJUSTEDLIBPATH ${PROJECT_BINARY_DIR}/3rd/${LIBNAME})
+  set_target_properties( ${target} PROPERTIES
+                         IMPORTED_LOCATION ${ADJUSTEDLIBPATH}
+			 IMPORTED_LOCATION_DEBUG ${ADJUSTEDLIBPATH}
+			 IMPORTED_LOCATION_RELEASE ${ADJUSTEDLIBPATH})
+endfunction()
+
 # Copy a file to a destination folder and set permissions suitable for a shared libary
 function( copyLibrary libName targetDir )
   # message( STATUS "copyLibrary: " ${libName} " " ${targetDir} )
@@ -74,12 +87,14 @@ file( MAKE_DIRECTORY ${VISR_BUILD_3RD_PARTY_RUNTIME_LIBRARY_DIR} )
 # More specifically, these are not imported targets as preferred in modern CMake.
 set( FIX_LIBRARIES )
 
+set( FIX_LIBRARY_TARGETS )
+
 if( BUILD_AUDIOINTERFACES_PORTAUDIO )
-  list( APPEND FIX_LIBRARIES PORTAUDIO_LIBRARIES )
+  list( APPEND FIX_LIBRARY_TARGETS Portaudio::portaudio )
 endif( BUILD_AUDIOINTERFACES_PORTAUDIO )
 
 if( BUILD_USE_SNDFILE_LIBRARY )
-  list( APPEND FIX_LIBRARIES SNDFILE_LIBRARY )
+  list( APPEND FIX_LIBRARY_TARGETS SndFile::sndfile )
   # On MacOS, sndfile depends on FLAC, OGG, and Vorbis.
   if( VISR_SYSTEM_NAME MATCHES "MacOS" )
    list( APPEND FIX_LIBRARIES FLAC_LIBRARY OGG_LIBRARY VORBIS_LIBRARY VORBISENC_LIBRARY )
@@ -94,6 +109,11 @@ endif( BUILD_PYTHON_BINDINGS AND (VISR_SYSTEM_NAME MATCHES "MacOS") )
 if(VISR_SYSTEM_NAME MATCHES "MacOS")
   foreach(v ${FIX_LIBRARIES} )
     fix_rpath(${v})
+    message( STATUS "FIX_LIBRARIES " ${v} ": " ${${v}} )
+  endforeach()
+  foreach(v ${FIX_LIBRARY_TARGETS} )
+    fixLibraryTarget(${v})
+    message( STATUS "FIX_LIBRARY_TARGET " ${v} ": " ${${v}} )
   endforeach()
   # Do the same for the boost libs.
   if( NOT Boost_USE_STATIC_LIBS )
@@ -125,10 +145,14 @@ endif(VISR_SYSTEM_NAME MATCHES "Windows")
 ################################################################################
 # Fixing internal dependencies of third party libraries.
 # This is no longer required for boost libraries when using the imported target "Boost::<libraryname>" syntax
-
 function(fix_dependencies_of_3rdparty depname libpath)
   set (EXECUTE_COMMAND bash "-c" "${PROJECT_SOURCE_DIR}/cmake_modules/./change_dependency_installname.sh ${depname} ${libpath}" )
   execute_process(COMMAND ${EXECUTE_COMMAND} OUTPUT_VARIABLE rv)
+endfunction()
+
+function(fix_dependencies_of_3rdparty_target depname target)
+  get_target_property( LIBLOCATION ${target} IMPORTED_LOCATION )
+  fix_dependencies_of_3rdparty( ${depname} ${LIBLOCATION} )
 endfunction()
 
 if( VISR_SYSTEM_NAME MATCHES "MacOS" AND BUILD_USE_SNDFILE_LIBRARY )
@@ -137,11 +161,11 @@ if( VISR_SYSTEM_NAME MATCHES "MacOS" AND BUILD_USE_SNDFILE_LIBRARY )
   get_filename_component(VORBIS_LIBRARY_NAME ${VORBIS_LIBRARY} NAME_WE)
   get_filename_component(VORBISENC_LIBRARY_NAME ${VORBISENC_LIBRARY} NAME_WE)
 
+  fix_dependencies_of_3rdparty_target(${FLAC_LIBRARY_NAME} SndFile::sndfile)
+  fix_dependencies_of_3rdparty_target(${OGG_LIBRARY_NAME} SndFile::sndfile)
+  fix_dependencies_of_3rdparty_target(${VORBIS_LIBRARY_NAME} SndFile::sndfile)
+  fix_dependencies_of_3rdparty_target(${VORBISENC_LIBRARY_NAME} SndFile::sndfile)
   fix_dependencies_of_3rdparty(${OGG_LIBRARY_NAME} ${FLAC_LIBRARY})
-  fix_dependencies_of_3rdparty(${FLAC_LIBRARY_NAME} ${SNDFILE_LIBRARY})
-  fix_dependencies_of_3rdparty(${OGG_LIBRARY_NAME} ${SNDFILE_LIBRARY})
-  fix_dependencies_of_3rdparty(${VORBIS_LIBRARY_NAME} ${SNDFILE_LIBRARY})
-  fix_dependencies_of_3rdparty(${VORBISENC_LIBRARY_NAME} ${SNDFILE_LIBRARY})
   fix_dependencies_of_3rdparty(${OGG_LIBRARY_NAME} ${VORBIS_LIBRARY})
   fix_dependencies_of_3rdparty(${OGG_LIBRARY_NAME} ${VORBISENC_LIBRARY})
   fix_dependencies_of_3rdparty(${VORBIS_LIBRARY_NAME} ${VORBISENC_LIBRARY})

@@ -108,7 +108,7 @@ for blockIdx in range(0,numPos):
 
     if headTrackEnabled:
         headrotation =  np.pi/2;
-        trackingInput.data().orientation = [0,0, -headrotation] #rotates over the z axis, that means that the rotation is on the xy plane
+        trackingInput.data().orientationYPR = [0,0, -headrotation] #rotates over the z axis, that means that the rotation is on the xy plane
         trackingInput.swapBuffers()
     posSph1 = cart2sph(x,y,z)
     posSph2 = cart2sph(-x,-y,-z)

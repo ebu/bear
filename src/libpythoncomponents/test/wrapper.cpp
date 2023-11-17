@@ -32,32 +32,53 @@ namespace pythoncomponents
 namespace test
 {
 
+namespace // unnamed
+{
+struct PythonPathFixture
+{
+  PythonPathFixture() : mVarName{ "PYTHONPATH" }
+  {
+    // Use the path to the VISR python externals (retrieved from CMake)
+    boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
+    mVariable = mVarName + std::string( "=" ) + additionalPath.string();
 
+    // Pass the path to the VISR externals via the PYTHONPATH environment
+    // variable.
+#ifdef VISR_SYSTEM_NAME_Windows
+    BOOST_ASSERT( _putenv( &mVariable[ 0 ] ) == 0 );
+#else
+    BOOST_ASSERT( putenv( &mVariable[ 0 ] ) == 0 );
+#endif
+  }
+  ~PythonPathFixture()
+  {
+#ifdef VISR_SYSTEM_NAME_Windows
+    std::string unsetCmd{ mVarName + std::string( "=" ) };
+    BOOST_ASSERT( _putenv( &unsetCmd[ 0 ] ) == 0 );
+#else
+    std::string unsetCmd{ mVarName };
+    BOOST_ASSERT( unsetenv( &unsetCmd[ 0 ] ) == 0 );
+#endif
+  }
+
+  std::string mVarName;
+  std::string mVariable;
+};
+} // unnamed namespace
 
 // Use the PYTHONPATH to locate transitive dependencies of the imported module
 // (here: The VISR external modules, e.g., 'visr') 
 // NOTE: this test must come first, because the state of the environmnent is preserved in between Python calls.
 // TODO: Consider a pythonsupport::InitialisationGuard::uninitialise() method to clean the state.
-BOOST_AUTO_TEST_CASE( WrapUsePYTHONPATH )
+BOOST_FIXTURE_TEST_CASE( WrapUsePYTHONPATH, PythonPathFixture )
 {
   std::string moduleName = "testmodule";
 
-  boost::filesystem::path basePath{CMAKE_CURRENT_SOURCE_DIR};
+  boost::filesystem::path basePath{ CMAKE_CURRENT_SOURCE_DIR };
   boost::filesystem::path const modulePath = basePath / "python";
 
-  // Use the path to the VISR python externals (retrieved from CMake)
-  boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-
-  std::string pythonPath = (std::string("PYTHONPATH=") + additionalPath.string());
-
-  // Pass the path to the VISR externals via the PYTHONPATH environment variable.
-  putenv( &pythonPath[0] );
-
-  char const * ppCheck = getenv( "PYTHONPATH" );
-  std::cout << "PYTHONPATH: " << ppCheck << std::endl;
-
   pythonsupport::InitialisationGuard::initialise();
-  
+
   const std::size_t blockSize{64};
   const SamplingFrequencyType samplingFrequency{48000};
   std::size_t const numBlocks{16};
@@ -164,7 +185,7 @@ BOOST_AUTO_TEST_CASE( WrapSingleFileModule )
 }
 
 // Wrap a Python component contained in a multi-file package)
-BOOST_AUTO_TEST_CASE( WrapMultiFilePackage )
+BOOST_FIXTURE_TEST_CASE( WrapMultiFilePackage, PythonPathFixture )
 {
   pythonsupport::InitialisationGuard::initialise();
 

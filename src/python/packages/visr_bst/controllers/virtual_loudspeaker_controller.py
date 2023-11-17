@@ -185,7 +185,7 @@ class VirtualLoudspeakerController( visr.AtomicComponent ):
         # Update the head orientation if tracking is used.
         if self.useHeadTracking and self.trackingInputProtocol.changed():
             htrack = self.trackingInputProtocol.data()
-            ypr = np.asarray(htrack.orientation, dtype=self.hrirPos.dtype)
+            ypr = np.asarray(htrack.orientationYPR, dtype=self.hrirPos.dtype)
             self.headDir = orientationToDirectionVector( -ypr, self.hrirPos.shape[-1] )
             self.trackingInputProtocol.resetChanged()
 

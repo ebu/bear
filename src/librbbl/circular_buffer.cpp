@@ -18,7 +18,7 @@ namespace rbbl
 
 /**
  * Common part of the private implementation object.
- * 
+ *
  */
 template< typename DataType >
 class CircularBuffer<DataType>::Impl
@@ -217,7 +217,7 @@ void CircularBuffer<DataType>::getWritePointers( DataType * * writePointers )
 template< typename DataType >
 void CircularBuffer<DataType>::commitWrite( std::size_t numberOfElementsWritten )
 {
-  if( numberOfElementsWritten >= length() )
+  if( numberOfElementsWritten > length() )
   {
     throw std::invalid_argument( "The number of committed writen samples must not exceed the length of the circular buffer." );
   }

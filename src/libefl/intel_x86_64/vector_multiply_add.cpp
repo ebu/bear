@@ -21,7 +21,6 @@ namespace intel_x86_64
 // exclude the definitions here.
 /// @cond NEVER
 
-
 template<>
 ErrorCode vectorMultiplyAddInplace<float, Feature::VISR_SIMD_FEATURE>( float const * const factor1,
 				    float const * const factor2,
@@ -220,6 +219,7 @@ ErrorCode vectorMultiplyAddInplace<double, Feature::VISR_SIMD_FEATURE>( double c
   }
   return noError;
 }
+/// @endcond NEVER
 
 // Temporarily suppress Doxygen warning until the feature-based dispatching is implemented properly.
 /// @cond NEVER

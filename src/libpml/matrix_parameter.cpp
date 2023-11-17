@@ -13,10 +13,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
-#include <boost/spirit/include/phoenix_stl.hpp>
-
+#include <boost/phoenix/core/reference.hpp>
+#include <boost/phoenix/stl/container.hpp>
 #include <ciso646>
 #include <complex>
 #include <fstream>
