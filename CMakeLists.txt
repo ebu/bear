@@ -51,10 +51,8 @@ INCLUDE( CTest )
 
 ## Set C++ standard used.
 
-# Enable C++ 11 support
-# This requires CMake >= 3.1
-# TODO: Check when we can increase the requirement to C++14
-set( CMAKE_CXX_STANDARD 11 )
+# Enable C++ 14 support
+set( CMAKE_CXX_STANDARD 14 )
 
 # Treat the above standard as a hard requirement rather than 'decaying' to a
 # previous standard if the requirments aren' met
