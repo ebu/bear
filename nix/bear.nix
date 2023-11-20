@@ -1,4 +1,4 @@
-{ lib, src, python, ear, visr_python ? null, numpy_quaternion, snakemake, visr_bear ? null }:
+{ lib, src, python, ear, visr_python ? null, numpy_quaternion, visr_bear ? null }:
 python.pkgs.buildPythonPackage rec {
   name = "bear";
   inherit src;
