@@ -72,7 +72,8 @@
         "ear_src": "ear_src",
         "flake-utils": "flake-utils",
         "libear_src": "libear_src",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "visr_src": "visr_src"
       }
     },
     "systems": {
@@ -88,6 +89,19 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "visr_src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1643817083,
+        "narHash": "sha256-B+x/wRJgHyWxw3TlMabEK9C6vbH2mr8NwAvPAqn8+ck=",
+        "type": "tarball",
+        "url": "https://github.com/ebu/bear/releases/download/v0.0.1-pre/visr-0.13.0-pre-5e13f020.zip"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/ebu/bear/releases/download/v0.0.1-pre/visr-0.13.0-pre-5e13f020.zip"
       }
     }
   },

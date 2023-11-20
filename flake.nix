@@ -16,7 +16,12 @@
     flake = false;
   };
 
-  outputs = { self, nixpkgs, flake-utils, ear_src, libear_src }:
+  inputs.visr_src = {
+    url = "https://github.com/ebu/bear/releases/download/v0.0.1-pre/visr-0.13.0-pre-5e13f020.zip";
+    flake = false;
+  };
+
+  outputs = { self, nixpkgs, flake-utils, ear_src, libear_src, visr_src }:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -60,7 +65,7 @@
             ear = pkgs.callPackage ./nix/ear.nix { inherit python; src = ear_src; };
             libear = pkgs.callPackage ./nix/libear.nix { inherit xsimd; src = libear_src; };
 
-            visr = pkgs.callPackage ./nix/visr.nix { inherit python; };
+            visr = pkgs.callPackage ./nix/visr.nix { inherit python; src = visr_src; };
             visr_python = python.pkgs.toPythonModule visr;
 
             visr_bear = pkgs.callPackage ./nix/visr_bear.nix { inherit python data_files libear visr_python; src = visr_bear_src; };
