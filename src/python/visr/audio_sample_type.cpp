@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <ciso646>
+#include <cstdint>
 #include <utility>
 #include <vector>
 

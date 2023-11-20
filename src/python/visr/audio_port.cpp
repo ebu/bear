@@ -19,6 +19,7 @@
 #include <pybind11/numpy.h>
 
 #include <ciso646>
+#include <cstdint>
 
 namespace visr
 {

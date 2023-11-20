@@ -6,6 +6,7 @@
 #include "detail/compile_time_hash_fnv1.hpp"
 
 #include <cstddef>
+#include <cstdint>
 
 namespace visr
 {

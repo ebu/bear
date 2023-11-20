@@ -9,6 +9,8 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/for_each_product.hpp>
 
+#include <cstdint>
+
 namespace visr
 {
 namespace efl

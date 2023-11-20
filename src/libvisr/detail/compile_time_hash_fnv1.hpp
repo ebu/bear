@@ -5,6 +5,7 @@
 
 #include <string>
 #include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 
 namespace visr

@@ -12,6 +12,7 @@
 #include <boost/preprocessor/seq/for_each_product.hpp>
 
 #include <complex>
+#include <cstdint>
 
 namespace visr
 {

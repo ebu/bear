@@ -2,6 +2,7 @@
 
 #include "audio_sample_type.hpp"
 
+#include <cstdint>
 #include <initializer_list>
 #include <map>
 #include <utility>

@@ -7,6 +7,8 @@
 #include <xmmintrin.h>
 #endif
 
+#include <cstdint>
+
 namespace visr
 {
 namespace efl
