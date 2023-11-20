@@ -10,7 +10,7 @@ stdenv.mkDerivation rec {
     "-DBUILD_STANDALONE_APPLICATIONS=false"
   ];
   postPatch = ''
-    sed -i "s%set( PYTHON_MODULE_INSTALL_DIRECTORY .*$%set( PYTHON_MODULE_INSTALL_DIRECTORY \"$out/${python.sitePackages}\")%" CMakeLists.txt
-    sed -i 's/ADD_SUBDIRECTORY( apps )//' src/CMakeLists.txt
+    substituteInPlace CMakeLists.txt \
+      --replace "\''${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" "$out/${python.sitePackages}"
   '';
 }

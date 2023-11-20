@@ -17,7 +17,9 @@
   };
 
   inputs.visr_src = {
-    url = "https://github.com/ebu/bear/releases/download/v0.0.1-pre/visr-0.13.0-pre-5e13f020.zip";
+    type = "git";
+    url = "https://github.com/ebu/bear.git";
+    ref = "visr";
     flake = false;
   };
 

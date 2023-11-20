@@ -125,9 +125,10 @@ To reformat code to match the existing style, run `black` on any changed sources
 
 ### VISR
 
-Get VISR 0.13.0 or greater. Currently this is available here:
+Get VISR 0.13.0 or greater. Currently this is available in the `visr` branch of this repository, or here:
 
-https://github.com/ebu/bear/releases/download/v0.0.1-pre/visr-0.13.0-pre-5e13f020.zip
+- zip: https://github.com/ebu/bear/archive/refs/heads/visr.zip
+- tar.gz: https://github.com/ebu/bear/archive/refs/heads/visr.tar.gz
 
 Eventually this will be available from the upstream repository:
 

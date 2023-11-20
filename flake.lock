@@ -94,14 +94,18 @@
     "visr_src": {
       "flake": false,
       "locked": {
-        "lastModified": 1643817083,
-        "narHash": "sha256-B+x/wRJgHyWxw3TlMabEK9C6vbH2mr8NwAvPAqn8+ck=",
-        "type": "tarball",
-        "url": "https://github.com/ebu/bear/releases/download/v0.0.1-pre/visr-0.13.0-pre-5e13f020.zip"
+        "lastModified": 1700565411,
+        "narHash": "sha256-b/q38V6H2xTRQNMU1a7u5CKUWkWlRR23doJ1lrh1dPI=",
+        "ref": "visr",
+        "rev": "4bba6abfbfab69c0ac0c1dd045733ce597df36f6",
+        "revCount": 11,
+        "type": "git",
+        "url": "https://github.com/ebu/bear.git"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://github.com/ebu/bear/releases/download/v0.0.1-pre/visr-0.13.0-pre-5e13f020.zip"
+        "ref": "visr",
+        "type": "git",
+        "url": "https://github.com/ebu/bear.git"
       }
     }
   },
