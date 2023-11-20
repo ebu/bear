@@ -10,6 +10,7 @@
 #include <ciso646>
 #include <cstdint>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 

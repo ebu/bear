@@ -15,6 +15,7 @@
 #include <ciso646>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 namespace visr

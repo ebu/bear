@@ -18,6 +18,7 @@
 #include <boost/phoenix/stl/container.hpp>
 
 #include <fstream>
+#include <sstream>
 
 namespace visr
 {

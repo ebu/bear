@@ -10,6 +10,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <sstream>
 #include <stdexcept>
 #include <iostream>
 

@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 #include <vector>
 
 // If active, the matrix of generated late reverb decorrelation filters is

@@ -15,6 +15,7 @@
 #include <ciso646> // should not be necessary in C++11, but MSVC is non-compliant here
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits> // for static type checking due to current limitations of the system.

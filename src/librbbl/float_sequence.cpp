@@ -9,6 +9,7 @@
 #include <ciso646>
 #include <cmath>
 #include <limits>
+#include <sstream>
 
 namespace visr
 {

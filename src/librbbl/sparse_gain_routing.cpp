@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <ciso646>
+#include <sstream>
 #include <vector>
 
 namespace visr

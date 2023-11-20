@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <ciso646>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
