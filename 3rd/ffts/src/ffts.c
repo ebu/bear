@@ -118,8 +118,8 @@ ffts_flush_instruction_cache(void *start, size_t length)
 #elif __ANDROID__
     cacheflush((long) start, (long) start + length, 0);
 #elif __linux__
-#if GCC_VERSION_AT_LEAST(4,3)
-    __builtin___clear_cache(start, (char*) start + length);
+#if GCC_VERSION_AT_LEAST(4,3) || defined __clang__
+    __builtin___clear_cache((char*) start, (char*) start + length);
 #elif __GNUC__
     __clear_cache((long) start, (long) start + length);
 #endif
