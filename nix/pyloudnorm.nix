@@ -11,5 +11,5 @@ python.pkgs.buildPythonPackage rec {
   };
 
   propagatedBuildInputs = with python.pkgs; [ numpy scipy ];
-  nativeCheckInputs = with python.pkgs; [ pytestCheckHook ];
+  nativeCheckInputs = with python.pkgs; [ pytestCheckHook soundfile ];
 }
