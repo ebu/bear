@@ -84,6 +84,10 @@
 
             # same as bear, but without the VISR module
             bear_no_visr = pkgs.callPackage ./nix/bear.nix { inherit python src ear numpy_quaternion; };
+
+            # builds without python
+            visr_nopython = visr.override { enable_python = false; };
+            visr_bear_nopython = visr_bear.override { visr = visr_nopython; visr_python = null; enable_python = false; };
           } // {
             # for checking source filter
             src = pkgs.runCommand "src" { } "cp -r ${src} $out";
