@@ -509,10 +509,9 @@ endif( BUILD_USE_SNDFILE_LIBRARY AND (VISR_SYSTEM_NAME MATCHES "MacOS") )
 
 # Note: Disabled installation to ${PYTHON_SITE_PACKAGES}, because this
 # prohibits the creation of installer packages.
-if( BUILD_PYTHON_BINDINGS )
-  set( PYTHON_MODULE_INSTALL_DIRECTORY
-  "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" )
-endif( BUILD_PYTHON_BINDINGS )
+# This sometimes gets used if BUILD_PYTHON_BINDINGS is not set.
+set( PYTHON_MODULE_INSTALL_DIRECTORY
+    "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" )
 set( DOCUMENTATION_INSTALL_DIRECTORY "${VISR_TOPLEVEL_INSTALL_DIRECTORY}/doc" )
 
 ################################################################################
