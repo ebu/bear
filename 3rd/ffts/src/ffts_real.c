@@ -80,7 +80,7 @@ ffts_free_1d_real(ffts_plan_t *p)
     free(p);
 }
 
-#ifdef __ARM_NEON__
+#ifdef HAVE_NEON
 static void
 ffts_execute_1d_real_neon(ffts_plan_t *p, const void *input, void *output)
 {
@@ -417,7 +417,7 @@ ffts_execute_1d_real(ffts_plan_t *p, const void *input, void *output)
     out[N + 1] = 0.0f;
 }
 
-#ifdef __ARM_NEON__
+#ifdef HAVE_NEON
 static void
 ffts_execute_1d_real_inv_neon(ffts_plan_t *p, const void *input, void *output)
 {
@@ -738,7 +738,7 @@ ffts_execute_1d_real_inv(ffts_plan_t *p, const void *input, void *output)
 FFTS_API ffts_plan_t*
 ffts_init_1d_real(size_t N, int sign)
 {
-#ifndef __ARM_NEON__
+#ifndef HAVE_NEON
     int cpu_flags = ffts_cpu_detect(NULL);
 #endif
     ffts_plan_t *p;
@@ -749,7 +749,7 @@ ffts_init_1d_real(size_t N, int sign)
         return NULL;
     }
 
-#ifdef __ARM_NEON__
+#ifdef HAVE_NEON
     p->transform = (sign < 0) ? &ffts_execute_1d_real_neon : &ffts_execute_1d_real_inv;
 #else
 #ifdef HAVE_SSE3
