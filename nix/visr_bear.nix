@@ -4,7 +4,6 @@ stdenv.mkDerivation rec {
   inherit src;
   nativeBuildInputs = [ cmake boost python.buildEnv visr_python eigen libear rapidjson ];
   cmakeFlags = [
-    "-DBEAR_PACKAGE_AND_INSTALL=false"
     "-DBEAR_UNIT_TESTS=true"
     "-DBEAR_DATA_PATH_DEFAULT=${data_files.default.file}"
     "-DBEAR_DATA_PATH_DEFAULT_SMALL=${data_files.default_small.file}"
