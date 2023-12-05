@@ -1,6 +1,6 @@
 {
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.nixpkgs.url = "nixpkgs/nixos-23.05";
+  inputs.nixpkgs.url = "nixpkgs/nixos-23.11";
 
   inputs.ear_src = {
     type = "git";
