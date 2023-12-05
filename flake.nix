@@ -50,10 +50,18 @@
           ];
           python_tools = [ pkgs.black python.pkgs.flake8 ];
           dsp_tools = with python.pkgs; [
-            h5py scipy dask distributed matplotlib simanneal cvxpy soundfile
-            pkgs.snakemake pkgs.sox
+            h5py
+            scipy
+            dask
+            distributed
+            matplotlib
+            simanneal
+            cvxpy
+            soundfile
+            pkgs.snakemake
+            pkgs.sox
             self.packages.${system}.pyloudnorm
-            jupyter
+            notebook
           ];
         in
         rec {
