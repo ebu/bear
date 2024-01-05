@@ -15,6 +15,8 @@ add_library(
   constructor_thread.cpp
   control.cpp
   control.hpp
+  data_file.hpp
+  data_file.cpp
   direct_delay_calc.cpp
   direct_delay_calc.hpp
   direct_diffuse_split.cpp

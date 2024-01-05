@@ -1,5 +1,6 @@
 #include "panner.hpp"
 
+#include "data_file.hpp"
 #include "utils.hpp"
 
 namespace {
@@ -51,6 +52,8 @@ using namespace Eigen;
 Panner::Panner(const std::string &brir_file_name)
 {
   auto tf = tensorfile::read(brir_file_name);
+
+  check_data_file_version(tf);
 
   views = tf.unpack<float>(tf.metadata["views"]);
   brirs = tf.unpack<float>(tf.metadata["brirs"]);
