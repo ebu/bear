@@ -382,6 +382,7 @@ def main(args):
     front_loudspeaker = np.argmin(np.linalg.norm(positions - [0, 1, 0], axis=1))
 
     output = dict(
+        bear_data_version=0,
         views=views.astype(np.float32),
         # shape (view, loudspeaker, ear, sample)
         brirs=irs.astype(np.float32),
