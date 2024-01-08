@@ -1,6 +1,6 @@
 # adapted from https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/xsimd/default.nix
 # MIT licensed
-{ lib, stdenv, fetchFromGitHub, cmake, doctest }:
+{ lib, stdenv, fetchFromGitHub, cmake, ninja, doctest }:
 stdenv.mkDerivation rec {
   pname = "xsimd";
   version = "10.0.0";
@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-+ewKbce+rjNWQ0nQzm6O4xSwgzizSPpDPidkQYuoSTU=";
   };
 
-  nativeBuildInputs = [ cmake doctest ];
+  nativeBuildInputs = [ cmake ninja doctest ];
 
   cmakeFlags = [ "-DBUILD_TESTS=ON" ];
 

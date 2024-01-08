@@ -1,8 +1,8 @@
-{ lib, stdenv, cmake, python, boost, fetchzip, src, enable_python ? true }:
+{ lib, stdenv, cmake, ninja, python, boost, fetchzip, src, enable_python ? true }:
 stdenv.mkDerivation rec {
   name = "VISR";
   inherit src;
-  nativeBuildInputs = [ cmake boost ] ++ lib.optional enable_python python.buildEnv;
+  nativeBuildInputs = [ cmake ninja boost ] ++ lib.optional enable_python python.buildEnv;
   cmakeFlags = [
     "-DBUILD_AUDIOINTERFACES_PORTAUDIO=FALSE"
     "-DBUILD_USE_SNDFILE_LIBRARY=FALSE"

@@ -1,9 +1,10 @@
-{ lib, stdenv, src, cmake, boost, python, visr ? null, visr_python ? null, data_files, eigen, libear, rapidjson, enable_python ? true }:
+{ lib, stdenv, src, cmake, ninja, boost, python, visr ? null, visr_python ? null, data_files, eigen, libear, rapidjson, enable_python ? true }:
 stdenv.mkDerivation rec {
   name = "visr_bear";
   inherit src;
   nativeBuildInputs = [
     cmake
+    ninja
     boost
     eigen
     libear
@@ -20,5 +21,4 @@ stdenv.mkDerivation rec {
   preConfigure = ''cmakeFlags="$cmakeFlags -DBEAR_PYTHON_SITE_PACKAGES=$out/${python.sitePackages}"'';
 
   doCheck = true;
-  checkPhase = "make test";
 }
