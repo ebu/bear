@@ -94,13 +94,12 @@
     "visr_src": {
       "flake": false,
       "locked": {
-        "lastModified": 1701791373,
-        "narHash": "sha256-B+ZXbzyGsUFd4a1UATpYTuF01B/OuRfG8JfwITVRjFo=",
-        "ref": "visr",
-        "rev": "3dcb75cbd658a253ce84c7050a9fd58c521ed545",
-        "revCount": 13,
-        "type": "git",
-        "url": "https://github.com/ebu/bear.git"
+        "lastModified": 1706626832,
+        "narHash": "sha256-AXvgWBvQZwi88zglKRK9quFfG52oqJaBldcREeqV3xI=",
+        "owner": "ebu",
+        "repo": "bear",
+        "rev": "7ba1653b67c305d7245c2798f81b8e27889342c6",
+        "type": "github"
       },
       "original": {
         "ref": "visr",
