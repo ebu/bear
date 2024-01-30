@@ -256,8 +256,9 @@ ENDIF( VISR_SYSTEM_NAME MATCHES "MacOS" )
 ############################################################
 # Set the minimum Mac OS version.
 if( VISR_SYSTEM_NAME MATCHES "MacOS" )
-#  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
- set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
+if( NOT CMAKE_OSX_DEPLOYMENT_TARGET )
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
+endif( NOT CMAKE_OSX_DEPLOYMENT_TARGET )
 endif( VISR_SYSTEM_NAME MATCHES "MacOS" )
 
 ############################################################
