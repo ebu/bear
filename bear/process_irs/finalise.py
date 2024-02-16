@@ -46,6 +46,10 @@ def parse_args():
                         help="enable gain normalisation factors",
     )
 
+    parser.add_argument('--label', help="label for metadata", required=True)
+    parser.add_argument('--description', help="description for metadata")
+    parser.add_argument('--released', help=argparse.SUPPRESS, action="store_true")
+
     return parser.parse_args()
 
 
@@ -381,8 +385,16 @@ def main(args):
     # select front loudspeaker idx
     front_loudspeaker = np.argmin(np.linalg.norm(positions - [0, 1, 0], axis=1))
 
+    metadata = dict(
+        label=args.label,
+        released=args.released,
+    )
+    if args.description is not None:
+        metadata["description"] = args.description
+
     output = dict(
         bear_data_version=0,
+        metadata=metadata,
         views=views.astype(np.float32),
         # shape (view, loudspeaker, ear, sample)
         brirs=irs.astype(np.float32),

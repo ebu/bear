@@ -38,6 +38,21 @@ rule find_global_delays:
     shell:
         "python -m bear.process_irs.find_global_delays {params.args} --tf-in {input[0]} {params.in_delays} --out {output}"
 
+def get_meta_args(wildcards):
+    metadata = config["params"][wildcards.params].get("metadata", {}).get(wildcards.sofa, {})
+    label = metadata.get("label", wildcards.sofa)
+    description = metadata.get("description")
+
+    args = ["--label", label]
+
+    if description is not None:
+        args.extend(["--description", description])
+
+    if metadata.get("released", False):
+        args.append("--released")
+
+    return args
+
 rule finalise:
     input:
         "irs/{params}/{sofa}.tf",
@@ -49,9 +64,10 @@ rule finalise:
         "bear_data/{params}/{sofa}.tf",
         "finalise_extra/{params}/{sofa}.tf",
     params:
-        args=lambda w: config["params"][w.params].get("finalise_args", "")
+        args=lambda w: config["params"][w.params].get("finalise_args", ""),
+        meta_args=get_meta_args,
     shell:
-        "python -m bear.process_irs.finalise {params.args} --tf-in {input[0]} --delays {input[1]} --tf-out {output[0]} --hoa-decoder {input[2]} --extra-out {output[1]}"
+        "python -m bear.process_irs.finalise {params.args} {params.meta_args:q} --tf-in {input[0]} --delays {input[1]} --tf-out {output[0]} --hoa-decoder {input[2]} --extra-out {output[1]}"
 
 rule report:
     input:

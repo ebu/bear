@@ -113,7 +113,7 @@ final data file.
 
 For BRIRs:
 
-    python -m bear.process_irs.finalise --tf-in irs.tf --delays global_delays.npy --tf-out bear_data.tf --hoa-decoder bear/process_irs/data/AmbiHOA3_magLS.sofa --extra-out finalise_extra.tf
+    python -m bear.process_irs.finalise --label "example v1" --tf-in irs.tf --delays global_delays.npy --tf-out bear_data.tf --hoa-decoder bear/process_irs/data/AmbiHOA3_magLS.sofa --extra-out finalise_extra.tf
 
 For HRIRs, add "--window none" to disable windowing.
 
