@@ -1,12 +1,18 @@
 params:
   brir:
     extract_args: "--ir-selection-algo closest"
+    metadata:
+      bbcrdlr_all_speakers:
+        label: "default room KU100 with multiple views v2.0"
   brir-fast:
     extract_args: "--ir-selection-algo closest --num-views 60 --layout 4+5+0"
     find_delay_over_view_args: "--default-schedule --opt-steps 10000"
   brir-one-view:
     extract_args: "--ir-selection-algo closest --num-views 1"
     one_view: true
+    metadata:
+      bbcrdlr_all_speakers:
+        label: "default room KU100 v2.0"
   brir-one-view-nowin:
     extract_args: "--ir-selection-algo closest --num-views 1"
     finalise_args: "--window none"
@@ -19,3 +25,10 @@ params:
     one_view: true
     hrir: true
     finalise_args: "--window none"
+    metadata:
+      HRIR_FULL2DEG:
+        label: "FHK KU100 HRIR v1.0"
+        description: "derived from the IRs described in \"Bernschütz, B. (2013). A Spherical Far Field HRIR/HRTF Compilation of the Neumann KU 100\""
+      sadie-d1-hrir:
+        label: "SADIE D1 KU100 HRIR v1.0"
+        description: "derived from subject D1 of the SADIE II Database"
