@@ -8,6 +8,7 @@
 #include <libvisr/time.hpp>
 
 #include "config_impl.hpp"
+#include "data_file.hpp"
 #include "listener_impl.hpp"
 #include "parameters.hpp"
 #include "top.hpp"
@@ -278,4 +279,82 @@ void Renderer::set_listener(const Listener &l, const boost::optional<Time> &inte
 }
 
 Renderer::~Renderer() = default;
+
+struct DataFileMetadataImpl {
+  rapidjson::Value metadata;
+
+  bool has_metadata = false;
+  std::string label;
+  std::string description;
+  bool released = false;
+};
+
+namespace {
+  std::string parse_label(rapidjson::Value &metadata)
+  {
+    auto it = metadata.FindMember("label");
+    if (it == metadata.MemberEnd()) throw std::runtime_error("expected label");
+
+    if (!it->value.IsString()) throw std::runtime_error("label should be a string");
+
+    return it->value.GetString();
+  }
+
+  std::string parse_description(rapidjson::Value &metadata)
+  {
+    auto it = metadata.FindMember("description");
+    if (it == metadata.MemberEnd()) return "";
+
+    if (!it->value.IsString()) throw std::runtime_error("description should be a string");
+
+    return it->value.GetString();
+  }
+
+  bool parse_released(rapidjson::Value &metadata)
+  {
+    auto it = metadata.FindMember("released");
+    if (it == metadata.MemberEnd()) throw std::runtime_error("expected released");
+
+    if (!it->value.IsBool()) throw std::runtime_error("released should be a bool");
+
+    return it->value.GetBool();
+  }
+}  // namespace
+
+DataFileMetadata::DataFileMetadata(std::unique_ptr<DataFileMetadataImpl> impl) : impl(std::move(impl)) {}
+DataFileMetadata::DataFileMetadata(DataFileMetadata &&other) = default;
+DataFileMetadata::~DataFileMetadata() = default;
+
+DataFileMetadata DataFileMetadata::read_from_file(const std::string &path)
+{
+  auto tf = tensorfile::read(path);
+
+  check_data_file_version(tf);
+
+  auto impl = std::make_unique<DataFileMetadataImpl>();
+
+  auto it = tf.metadata.FindMember("metadata");
+  if (it != tf.metadata.MemberEnd()) {
+    if (!it->value.IsObject()) throw std::runtime_error("data file metadata should be object");
+
+    impl->has_metadata = true;
+
+    impl->metadata = it->value;
+
+    impl->label = parse_label(impl->metadata);
+    impl->description = parse_description(impl->metadata);
+    impl->released = parse_released(impl->metadata);
+  }
+
+  return {std::move(impl)};
+}
+
+bool DataFileMetadata::has_metadata() const { return impl->has_metadata; }
+
+const std::string &DataFileMetadata::get_label() const { return impl->label; }
+
+const std::string &DataFileMetadata::get_description() const { return impl->description; }
+
+bool DataFileMetadata::is_released() const { return impl->released; }
+
 }  // namespace bear

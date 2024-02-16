@@ -255,4 +255,35 @@ class Renderer {
   std::unique_ptr<RendererImpl> impl;
 };
 
+class DataFileMetadataImpl;
+
+/// metadata contained in a BEAR data file
+class DataFileMetadata {
+ public:
+  /// get the metadata for a file with a given path
+  static DataFileMetadata read_from_file(const std::string &path);
+
+  /// does the file include metadata, or was it a file from before when
+  /// metadata was added
+  bool has_metadata() const;
+
+  /// short label that describes this file
+  const std::string &get_label() const;
+
+  /// longer description of this file
+  const std::string &get_description() const;
+
+  /// is this a data file released by the BEAR project, or a preliminary or
+  /// custom one?
+  bool is_released() const;
+
+  DataFileMetadata() = delete;
+  DataFileMetadata(DataFileMetadata &&);
+  ~DataFileMetadata();
+
+ private:
+  DataFileMetadata(std::unique_ptr<DataFileMetadataImpl> impl);
+  std::unique_ptr<DataFileMetadataImpl> impl;
+};
+
 };  // namespace bear

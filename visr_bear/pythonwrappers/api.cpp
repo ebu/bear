@@ -171,6 +171,13 @@ namespace python {
         .def(py::init<int64_t, int64_t>())
         .def_property_readonly("numerator", &Time::numerator)
         .def_property_readonly("denominator", &Time::denominator);
+
+    py::class_<DataFileMetadata>(m, "DataFileMetadata")
+        .def_static("read_from_file", &DataFileMetadata::read_from_file)
+        .def_property_readonly("has_metadata", &DataFileMetadata::has_metadata)
+        .def_property_readonly("label", &DataFileMetadata::get_label)
+        .def_property_readonly("description", &DataFileMetadata::get_description)
+        .def_property_readonly("is_released", &DataFileMetadata::is_released);
   }
 
 }  // namespace python
