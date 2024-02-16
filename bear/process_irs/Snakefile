@@ -142,6 +142,10 @@ rule norm:
     shell:
         "python -m bear.test_files.normalize {input} - {output}"
 
+rule tfs:
+    input:
+        expand("bear_data/{tf}.tf", tf=NEW_TFS),
+
 rule all:
     input:
         expand(
