@@ -1,9 +1,9 @@
-set(default_url https://github.com/ebu/bear/releases/download/v0.0.1-pre/default.tf)
+set(default_url https://github.com/ebu/bear/releases/download/v0.0.1-pre/default_v1.1.tf)
 set(default_fname default.tf)
-set(default_sha256 c23a36289f246c96779fdce75e108187185d3ec7aeedd6afa25f7c3dc5e42131)
+set(default_sha256 171acae2159e60ffe9d705abc16a79be129ecd06d37186fae413a265b6ed71e8)
 
 set(default_small_fname default_small.tf)
-set(default_small_url https://github.com/ebu/bear/releases/download/v0.0.1-pre/default_small.tf)
-set(default_small_sha256 25f4ed69153f6245e494fdffca27be9be632cb0013ddd1de6e1ec20f22b44ddf)
+set(default_small_url https://github.com/ebu/bear/releases/download/v0.0.1-pre/default_small_v1.1.tf)
+set(default_small_sha256 2afd36456dd45c1fc5f2abf94a19e945fbf40595d2a331669934e94c46cd1101)
 
 set(all_files default default_small)
