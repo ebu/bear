@@ -284,7 +284,8 @@ void Renderer::set_listener(const Listener &l, const boost::optional<Time> &inte
 
 Renderer::~Renderer() = default;
 
-struct DataFileMetadataImpl {
+class DataFileMetadataImpl {
+ public:
   rapidjson::Value metadata;
 
   bool has_metadata = false;
