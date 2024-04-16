@@ -127,7 +127,7 @@ class StateMachine {
 class TypeAdapter {};
 
 struct ObjectsTypeAdapter {
-  static bool input_fits(const ConfigImpl &config, size_t channel, const ObjectsInput &metadata)
+  static bool input_fits(const ConfigImpl &config, size_t channel, const ObjectsInput &)
   {
     return channel < config.num_objects_channels;
   }
@@ -141,7 +141,7 @@ struct ObjectsTypeAdapter {
 };
 
 struct DirectSpeakersTypeAdapter {
-  static bool input_fits(const ConfigImpl &config, size_t channel, const DirectSpeakersInput &metadata)
+  static bool input_fits(const ConfigImpl &config, size_t channel, const DirectSpeakersInput &)
   {
     return channel < config.num_direct_speakers_channels;
   }
@@ -157,6 +157,8 @@ struct DirectSpeakersTypeAdapter {
 struct HOATypeAdapter {
   static bool input_fits(const ConfigImpl &config, size_t stream, const HOAInput &metadata)
   {
+    (void)stream;
+
     for (size_t channel : metadata.channels)
       if (channel >= config.num_hoa_channels) return false;
     return true;
