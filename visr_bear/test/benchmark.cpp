@@ -267,7 +267,7 @@ int main(int, char **)
       };
 
       // non-default FFTs
-      for (const std::string &fft_implementation : {"kissfft"})
+      for (const char *fft_implementation : {"kissfft"})
         for (int num_objects_p = -1; num_objects_p <= 6; num_objects_p++)
           run_bench(num_objects_p >= 0 ? 1 << num_objects_p : 0, 0, 0, false, false, fft_implementation);
 
