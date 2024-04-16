@@ -26,7 +26,7 @@ GainCalcObjects::GainCalcObjects(const SignalFlowContext &ctx,
       temp_diffuse_a(panner->num_gains()),
       temp_direct_b(panner->num_gains()),
       temp_diffuse_b(panner->num_gains()),
-      per_object_data(config.num_objects_channels, (size_t)panner->num_gains())
+      per_object_data(config.num_objects_channels, panner->num_gains())
 {
 }
 
