@@ -239,7 +239,7 @@ void run_benchmark_print(const BenchmarkConfig &c, size_t run)
   std::cout << "\n";
 }
 
-int main(int argc, char **argv)
+int main(int, char **)
 {
   for (size_t run = 0; run < 5; run++) {
     for (size_t period : {128, 512, 2048}) {
