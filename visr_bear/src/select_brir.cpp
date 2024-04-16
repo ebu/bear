@@ -45,7 +45,6 @@ void SelectBRIR::process()
 
     // calculate the 'residual' listener with the BRIR rotation removed
     Eigen::Vector3d front{0.0, 1.0, 0.0};
-    Eigen::Quaterniond brir_rot = Eigen::Quaterniond::FromTwoVectors(front, views.row(max_dp_idx));
     listener_out.data().position = listener_in.data().position;
     listener_out.data().orientation = view_rotations[max_dp_idx] * listener_in.data().orientation;
     listener_out.swapBuffers();
