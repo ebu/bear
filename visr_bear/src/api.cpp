@@ -211,6 +211,10 @@ class RendererImpl {
 
   void set_listener(const Listener &l, const boost::optional<Time> &interpolation_time)
   {
+    // currently interpolation is ignored, but it's not clear if interpolating
+    // without some delay compensation would be a good idea anyway
+    (void)interpolation_time;
+
     auto &data = dynamic_cast<ListenerParameter &>(listener_in.data());
     data = l.get_impl();
     listener_in.swapBuffers();
