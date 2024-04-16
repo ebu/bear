@@ -80,9 +80,9 @@ DSP::DSP(const SignalFlowContext &ctx,
             /* maxRoutings = */ 2 * panner->num_virtual_loudspeakers(),
             /* numberOfInterpolants = */ 1,
             /* transitionSamples = */ ctx.period(),
-            /* filters = */ initial_brir_filters(config),
-            /* initialInterpolants = */ initial_brir_interpolants(config),
-            /* routings = */ initial_brir_routings(config),
+            /* filters = */ initial_brir_filters(),
+            /* initialInterpolants = */ initial_brir_interpolants(),
+            /* routings = */ initial_brir_routings(),
             /* controlInputs = */ rcl::InterpolatingFirFilterMatrix::ControlPortConfig::Interpolants,
             /* fftImplementation = */ config.fft_implementation.c_str()),
       brir_interpolation_controller(ctx, "brir_interpolation_controller", this, config, panner),
@@ -205,7 +205,7 @@ DSP::DSP(const SignalFlowContext &ctx,
   audioConnection(add_hoa.audioPort("out"), out);
 }
 
-rbbl::InterpolationParameterSet DSP::initial_brir_interpolants(const ConfigImpl &config)
+rbbl::InterpolationParameterSet DSP::initial_brir_interpolants()
 {
   rbbl::InterpolationParameterSet ips;
   for (size_t vs = 0; vs < panner->num_virtual_loudspeakers(); vs++)
@@ -214,7 +214,7 @@ rbbl::InterpolationParameterSet DSP::initial_brir_interpolants(const ConfigImpl 
   return ips;
 }
 
-rbbl::FilterRoutingList DSP::initial_brir_routings(const ConfigImpl &config)
+rbbl::FilterRoutingList DSP::initial_brir_routings()
 {
   rbbl::FilterRoutingList routings;
   for (size_t vs = 0; vs < panner->num_virtual_loudspeakers(); vs++)
@@ -223,7 +223,7 @@ rbbl::FilterRoutingList DSP::initial_brir_routings(const ConfigImpl &config)
   return routings;
 }
 
-efl::BasicMatrix<float> DSP::initial_brir_filters(const ConfigImpl &config)
+efl::BasicMatrix<float> DSP::initial_brir_filters()
 {
   efl::BasicMatrix<float> filters(panner->num_views() * 2 * panner->num_virtual_loudspeakers(),
                                   panner->brir_length());

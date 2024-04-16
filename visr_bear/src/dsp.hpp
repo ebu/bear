@@ -28,9 +28,9 @@ class DSP : public CompositeComponent {
                std::shared_ptr<Panner> panner);
 
  private:
-  rbbl::InterpolationParameterSet initial_brir_interpolants(const ConfigImpl &config);
-  rbbl::FilterRoutingList initial_brir_routings(const ConfigImpl &config);
-  efl::BasicMatrix<float> initial_brir_filters(const ConfigImpl &config);
+  rbbl::InterpolationParameterSet initial_brir_interpolants();
+  rbbl::FilterRoutingList initial_brir_routings();
+  efl::BasicMatrix<float> initial_brir_filters();
 
   std::shared_ptr<Panner> panner;
 
