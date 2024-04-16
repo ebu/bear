@@ -66,10 +66,12 @@ set(BEAR_PYTHON_SITE_PACKAGES
 # Check whether the pybind11 version used to build the VISR Python externals is
 # compatible with the one used for building this library.
 getvisrpybind11version(VISR::pythonsupport_shared VISR_PYBIND11_VERSION)
+get_directory_property(pybind11_VERSION DIRECTORY ${PYBIND11_DIR} DEFINITION
+                                                  pybind11_VERSION)
+
 message(STATUS "VISR_PYBIND11_VERSION: " ${VISR_PYBIND11_VERSION})
-if(NOT ${VISR_PYBIND11_VERSION} VERSION_EQUAL
-   ${PYBIND11_VERSION_MAJOR}.${PYBIND11_VERSION_MINOR}.${PYBIND11_VERSION_PATCH}
-)
+message(STATUS "pybind11_VERSION: " ${pybind11_VERSION})
+if(NOT ${VISR_PYBIND11_VERSION} VERSION_EQUAL ${pybind11_VERSION})
   message(
     WARNING
       "Pybind11 version used in VISR differs from version used for library."
