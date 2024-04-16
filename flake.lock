@@ -3,11 +3,11 @@
     "ear_src": {
       "flake": false,
       "locked": {
-        "lastModified": 1696330591,
-        "narHash": "sha256-dpJtZ974HrSklPIh78UByjhEGsbVyltklceIcCZ81a4=",
+        "lastModified": 1712678150,
+        "narHash": "sha256-dwLalhg6rwdXKtY4iph3/bZuU+aW5sXbKVv8pqLOS5g=",
         "ref": "master",
-        "rev": "29efa875c772e86b09c9154381cbe2d1db60f999",
-        "revCount": 239,
+        "rev": "a04e287f247809653a031b7c99306066ec3d94c1",
+        "revCount": 364,
         "type": "git",
         "url": "https://github.com/ebu/ebu_adm_renderer.git"
       },
