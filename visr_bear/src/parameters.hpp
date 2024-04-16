@@ -14,15 +14,12 @@ struct ParameterTypeDetail {
 
 template <>
 struct ParameterTypeDetail<ObjectsInput> {
-  static constexpr const visr::ParameterType ptype()
-  {
-    return visr::detail::compileTimeHashFNV1("ObjectsInput");
-  }
+  static constexpr visr::ParameterType ptype() { return visr::detail::compileTimeHashFNV1("ObjectsInput"); }
 };
 
 template <>
 struct ParameterTypeDetail<DirectSpeakersInput> {
-  static constexpr const visr::ParameterType ptype()
+  static constexpr visr::ParameterType ptype()
   {
     return visr::detail::compileTimeHashFNV1("DirectSpeakersInput");
   }
@@ -30,7 +27,7 @@ struct ParameterTypeDetail<DirectSpeakersInput> {
 
 template <>
 struct ParameterTypeDetail<HOAInput> {
-  static constexpr const visr::ParameterType ptype() { return visr::detail::compileTimeHashFNV1("HOAInput"); }
+  static constexpr visr::ParameterType ptype() { return visr::detail::compileTimeHashFNV1("HOAInput"); }
 };
 
 template <typename ValueType>
