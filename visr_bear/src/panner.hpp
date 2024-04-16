@@ -97,7 +97,7 @@ class Panner {
 
   double compensation_gain_direct(const Ref<const VectorXd> &gains, SelectedBRIR selected_brir) const;
 
-  const double decorrelation_delay() const;
+  double decorrelation_delay() const;
 
   size_t n_hoa_channels() const { return n_hoa_channels_; }
   size_t hoa_order() const { return hoa_order_; }

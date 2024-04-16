@@ -401,7 +401,7 @@ double Panner::compensation_gain_direct(const Ref<const VectorXd> &gains, Select
     throw std::logic_error("unknown gain_comp_type");
 }
 
-const double Panner::decorrelation_delay() const { return (double)decorrelation_delay_ / fs; }
+double Panner::decorrelation_delay() const { return (double)decorrelation_delay_ / fs; }
 
 const float *Panner::get_hoa_ir(size_t channel, size_t ear) const
 {
