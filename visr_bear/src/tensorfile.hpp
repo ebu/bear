@@ -17,7 +17,7 @@ class format_error : public std::runtime_error {
 class MMap;
 
 namespace detail {
-  inline size_t calc_index(const size_t *strides) { return 0u; }
+  inline size_t calc_index(const size_t * /* strides */) { return 0u; }
 
   template <typename Index, typename... Indices>
   inline size_t calc_index(const size_t *strides, Index index, Indices... indices)
