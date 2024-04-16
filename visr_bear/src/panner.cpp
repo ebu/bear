@@ -154,7 +154,7 @@ void Panner::calc_objects_gains(const ear::ObjectsTypeMetadata &type_metadata,
 
 void Panner::get_vs_gains(const DirectDiffuse<const Ref<const VectorXd> &> &gains,
                           DirectDiffuse<Ref<VectorXd>> vs_gains,
-                          SelectedBRIR selected_brir) const
+                          SelectedBRIR) const
 {
   if ((size_t)gains.direct.rows() != num_gains())
     throw std::invalid_argument("direct gains has wrong number of rows");
