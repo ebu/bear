@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE( InterpolatingConvolverStatic )
 		  ips,
 		  filters,
 		  alignment,
-		  "ffts" );
+		  "default" );
 #if 0
   BOOST_CHECK_MESSAGE( cSignalLength % cBlockLength == 0 , "The signal length must be an integral multiple of the block size." );
   std::size_t const cNumBlocks = cSignalLength / cBlockLength;

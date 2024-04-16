@@ -7,7 +7,10 @@
 #include "ipp_fft_wrapper.hpp"
 #endif
 #include "kiss_fft_wrapper.hpp"
+
+#ifdef BUILD_FFTS
 #include "ffts_wrapper.hpp"
+#endif
 
 #include <stdexcept>
 
@@ -86,8 +89,11 @@ struct InstantiateFftWrapperFactory
     FftWrapperFactory<float>::registerWrapper<KissFftWrapper<float> >( "kissfft" );
     FftWrapperFactory<double>::registerWrapper<KissFftWrapper<double> >( "kissfft" );
 
+#ifdef BUILD_FFTS
     FftWrapperFactory<float>::registerWrapper<FftsWrapper<float> >( "ffts" );
     // FFTS is not implemented for type double.
+#endif
+
 #ifdef BUILD_USE_IPP
     FftWrapperFactory<float>::registerWrapper<IppFftWrapper<float> >( "ipp" );
     FftWrapperFactory<double>::registerWrapper<IppFftWrapper<double> >( "ipp" );

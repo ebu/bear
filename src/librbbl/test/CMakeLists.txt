@@ -7,7 +7,6 @@ add_definitions( -DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
 set( SOURCES
  biquad_coefficient.cpp
  circular_buffer.cpp
- ffts_wrapper.cpp
  float_sequence.cpp index_sequence.cpp
  interpolating_convolver.cpp
  kiss_fft_wrapper.cpp
@@ -35,6 +34,9 @@ if( BUILD_USE_IPP )
   list( APPEND SOURCES ipp_fft_wrapper.cpp)
   target_compile_definitions(${APPLICATION_NAME} PRIVATE BUILD_USE_IPP )
 endif( BUILD_USE_IPP )
+if( BUILD_FFTS )
+  list( APPEND SOURCES ffts_wrapper.cpp)
+endif( BUILD_FFTS )
 
 set_target_properties( ${APPLICATION_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}/test_binaries)

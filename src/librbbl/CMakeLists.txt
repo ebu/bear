@@ -7,7 +7,6 @@ circular_buffer.cpp
 crossfading_convolver_uniform.cpp
 core_convolver_uniform.cpp
 fft_wrapper_factory.cpp
-ffts_wrapper.cpp
 fir.cpp
 filter_routing.cpp
 fractional_delay_base.cpp
@@ -42,7 +41,6 @@ filter_routing.hpp
 fir.hpp
 fft_wrapper_base.hpp
 fft_wrapper_factory.hpp
-ffts_wrapper.hpp
 float_sequence.hpp
 fractional_delay_base.hpp
 fractional_delay_factory.hpp
@@ -67,6 +65,11 @@ if( BUILD_USE_IPP )
   list( APPEND SOURCES ipp_fft_wrapper.cpp )
   list( APPEND HEADERS ipp_fft_wrapper.hpp )
 endif( BUILD_USE_IPP )
+
+if( BUILD_FFTS )
+  list( APPEND SOURCES ffts_wrapper.cpp )
+  list( APPEND HEADERS ffts_wrapper.hpp )
+endif( BUILD_FFTS )
 
 if( "static" IN_LIST VISR_BUILD_LIBRARY_TYPES )
   add_library( rbbl_static STATIC ${SOURCES} ${HEADERS} )
@@ -96,7 +99,10 @@ endif( "static_pic" IN_LIST VISR_BUILD_LIBRARY_TYPES )
 foreach(LIB_TYPE ${VISR_BUILD_LIBRARY_TYPES} )
   target_compile_definitions( rbbl_${LIB_TYPE} PRIVATE VISR_BUILD_RBBL_LIBRARY=1)
   target_link_libraries( rbbl_${LIB_TYPE} PUBLIC efl_${LIB_TYPE} )
-  target_link_libraries( rbbl_${LIB_TYPE} PRIVATE ffts_static )
+  if( BUILD_FFTS )
+    target_link_libraries( rbbl_${LIB_TYPE} PRIVATE ffts_static )
+    target_compile_definitions( rbbl_${LIB_TYPE} PRIVATE -DBUILD_FFTS )
+  endif( BUILD_FFTS )
   target_link_libraries( rbbl_${LIB_TYPE} PRIVATE kissfft_static )
   target_link_libraries( rbbl_${LIB_TYPE} PUBLIC Boost::boost ) # Adds the boost include directory
   if( BUILD_USE_IPP )

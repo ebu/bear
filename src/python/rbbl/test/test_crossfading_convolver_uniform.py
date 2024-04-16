@@ -48,7 +48,7 @@ def test_crossfading_convolver_instantiation(plot=False):
             initialRoutings = routings,
             initialFilters = filterMtx,
             alignment=4, # Alignment in samples, minimum alignment required by ffts.
-            fftImplementation = "ffts"
+            fftImplementation = "default"
             )
 
     numBlocks = 16

@@ -388,6 +388,8 @@ endif( VISR_SYSTEM_NAME MATCHES Linux )
 ###########################################################
 # Support for 3rd-party libraries.
 
+option( BUILD_FFTS "Build an internal copy of FFTS" ON )
+
 # Add 3rd-party libraries that are built locally.
 add_subdirectory( 3rd )
 
