@@ -9,7 +9,7 @@ namespace bear {
 SelectBRIR::SelectBRIR(const SignalFlowContext &ctx,
                        const char *name,
                        CompositeComponent *parent,
-                       const ConfigImpl &config,
+                       const ConfigImpl &,
                        std::shared_ptr<Panner> panner_)
     : AtomicComponent(ctx, name, parent),
       panner(std::move(panner_)),
