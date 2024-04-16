@@ -12,7 +12,7 @@ Eigen::VectorXd encode(int order, Eigen::Vector3d pos)
 
   int nch = (order + 1) * (order + 1);
   Eigen::VectorXd res(nch);
-  for (size_t acn = 0; acn < nch; acn++) {
+  for (int acn = 0; acn < nch; acn++) {
     int n, m;
     std::tie(n, m) = bear::ear_bits::hoa::from_acn(acn);
     res(acn) = bear::ear_bits::hoa::sph_harm(n, m, az, el, bear::ear_bits::hoa::norm_N3D);

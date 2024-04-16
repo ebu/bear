@@ -149,7 +149,7 @@ void quaternion_to_sh_rotation_matrix(const Eigen::Quaterniond &q,
   if (order <= 0) throw std::invalid_argument("order must be +ve");
 
   size_t n_channels = (order + 1) * (order + 1);
-  if (sh_transform.rows() != n_channels || sh_transform.cols() != n_channels)
+  if ((size_t)sh_transform.rows() != n_channels || (size_t)sh_transform.cols() != n_channels)
     throw std::invalid_argument("sh_transform is not correct size");
 
   Eigen::Matrix3d rotation_matrix = quaternion_to_rotation_mat(q);
