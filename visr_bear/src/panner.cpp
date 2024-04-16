@@ -336,6 +336,8 @@ double Panner::get_expected_gain_quick(double *gains,
                                        LeftRight<double> direct_delays,
                                        SelectedBRIR selected_brir) const
 {
+  (void)direct_delays;  // expected gain does not depend on delays
+
   double sum = 0.0;
   tensorfile::NDArrayT<float> &factors = *gain_comp_factors;
 
