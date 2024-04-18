@@ -43,15 +43,15 @@ include( adjust_test_environment )
 adjustTestEnvironment( ${APPLICATION_NAME} )
 
 # The PYTHONHOME environment variable must be set in order to let the Python
-# interpreter embedded in the unit test binary start the correct interpreter,
-# i.e., the one corresponding to the Python environment used for building
-# the externals.
+# interpreter embedded in the unit test binary find the right standard
+# libraries, i.e., the one corresponding to the Python environment used for
+# building the externals.
 # Retrieve the correct setting for PYTHONHOME from the Python executable.
 execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.base_prefix)"
-OUTPUT_VARIABLE PYTHON_BASE_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE )
+  COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.prefix+':'+sys.exec_prefix)"
+  OUTPUT_VARIABLE PYTHON_HOME OUTPUT_STRIP_TRAILING_WHITESPACE )
 set_property(TEST ${APPLICATION_NAME} APPEND PROPERTY ENVIRONMENT
-  "PYTHONHOME=${PYTHON_BASE_PREFIX}" )
+  "PYTHONHOME=${PYTHON_HOME}" )
 # Disable leak checking because the memory handling of Python interpreter
 # causes leak reports (false positives?) that are outside our responsibility.
 set_property(TEST ${APPLICATION_NAME} APPEND PROPERTY ENVIRONMENT
