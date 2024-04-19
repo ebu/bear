@@ -6,6 +6,7 @@ setup(
     version="0.0.1",
     install_requires=[
         "ear~=2.1",
+        "importlib_resources",
         "numpy",
     ],
     packages=find_packages(),

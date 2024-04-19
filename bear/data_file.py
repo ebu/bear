@@ -1,4 +1,4 @@
-import pkg_resources
+import importlib_resources
 import os
 
 
@@ -15,12 +15,12 @@ def get_path(file_url):
         # try to find the file in a couple of different places
         for package, prefix in ("bear", "data/"), ("visr_bear_data", ""):
             try:
-                full_path = pkg_resources.resource_filename(package, prefix + path)
+                full_path = importlib_resources.files(package) / prefix / path
             except ModuleNotFoundError:
                 continue
 
-            if os.path.isfile(full_path):
-                return full_path
+            if full_path.is_file():
+                return str(full_path)
         else:
             raise Exception(f"resource '{path}' not found")
     elif file_url.startswith("file:"):
