@@ -1,4 +1,4 @@
-{ stdenv, python, fetchFromGitHub, src }:
+{ stdenv, python, src }:
 python.pkgs.buildPythonPackage rec {
   name = "ear";
   inherit src;
