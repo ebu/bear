@@ -9,7 +9,7 @@ stdenv.mkDerivation rec {
     eigen
     libear
     rapidjson
-  ] ++ (if enable_python then [ python.buildEnv visr_python ] else [ visr ]);
+  ] ++ (if enable_python then [ python visr_python ] else [ visr ]);
   cmakeFlags = [
     "-DBEAR_UNIT_TESTS=true"
     "-DBEAR_DATA_PATH_DEFAULT=${data_files.default.file}"
