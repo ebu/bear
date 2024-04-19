@@ -25,9 +25,18 @@ endfunction()
 # In addition to the adjustments needed for all unit tests, the PYTHONPATH must contain
 # the directory holding all used VISR Python externals.
 # This is done by passing a CMake target pythonpackage.
-# TODO: consider list of PYTHONPATH entries as (additional?) option.
 function( adjustPythonTestEnvironment target pythonpackage )
   adjustTestEnvironment( ${target} )
-  set_property( TEST ${target} APPEND PROPERTY ENVIRONMENT
-    "PYTHONPATH=$<TARGET_FILE_DIR:${pythonpackage}>" )
+  if( CMAKE_VERSION VERSION_LESS "3.22.0" )
+    # ideally we would add to PYTHONPATH, but the path separator is
+    # system-dependant, and the sensible way to do it would be to use
+    # cmake_path or cmake -E env, but those don't help expand the support base
+    # (much), so just ignore it with a warning
+    message(WARNING "packages on PYTHONPATH will be ignored in tests; upgrade to cmake 3.22")
+    set_property( TEST ${target} APPEND PROPERTY ENVIRONMENT
+      "PYTHONPATH=$<TARGET_FILE_DIR:${pythonpackage}>" )
+  else()
+    set_property( TEST ${target} APPEND PROPERTY ENVIRONMENT_MODIFICATION
+      "PYTHONPATH=path_list_prepend:$<TARGET_FILE_DIR:${pythonpackage}>" )
+  endif( CMAKE_VERSION VERSION_LESS "3.22.0" )
 endfunction()
