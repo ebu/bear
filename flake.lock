@@ -38,11 +38,11 @@
     "libear_src": {
       "flake": false,
       "locked": {
-        "lastModified": 1683050932,
-        "narHash": "sha256-4Ce1B9Ajuw9K8zy2PVl46DTqae5biPVftDGNCaFedbU=",
+        "lastModified": 1712698185,
+        "narHash": "sha256-yLOWHkhUI57vPDf9G/GvFHwD0bQEsl9dE3ll/0d0r0Y=",
         "ref": "master",
-        "rev": "10e071784d7f033fee8e456032458f10dd1da174",
-        "revCount": 83,
+        "rev": "2db69f8fcea0bc5db8a78e14a9c2ae6ed4283c15",
+        "revCount": 109,
         "type": "git",
         "url": "https://github.com/ebu/libear.git"
       },
