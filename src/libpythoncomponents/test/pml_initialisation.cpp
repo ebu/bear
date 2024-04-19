@@ -19,7 +19,6 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <stdlib.h> // Use putenv() which is not in the C++ standard
 #include <iostream>
 
 #include <stdexcept>
@@ -34,41 +33,7 @@ namespace pythoncomponents
 namespace test
 {
 
-namespace // unnamed
-{
-struct PythonPathFixture
-{
-  PythonPathFixture() : mVarName{ "PYTHONPATH" }
-  {
-    // Use the path to the VISR python externals (retrieved from CMake)
-    boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-    mVariable = mVarName + std::string( "=" ) + additionalPath.string();
-
-    // Pass the path to the VISR externals via the PYTHONPATH environment
-    // variable.
-#ifdef VISR_SYSTEM_NAME_Windows
-    BOOST_ASSERT( _putenv( &mVariable[ 0 ] ) == 0 );
-#else
-    BOOST_ASSERT( putenv( &mVariable[ 0 ] ) == 0 );
-#endif
-  }
-  ~PythonPathFixture()
-  {
-#ifdef VISR_SYSTEM_NAME_Windows
-    std::string unsetCmd{ mVarName + std::string( "=" ) };
-    BOOST_ASSERT( _putenv( &unsetCmd[ 0 ] ) == 0 );
-#else
-    std::string unsetCmd{ mVarName };
-    BOOST_ASSERT( unsetenv( &unsetCmd[ 0 ] ) == 0 );
-#endif
-  }
-
-  std::string mVarName;
-  std::string mVariable;
-};
-} // unnamed namespace
-
-BOOST_FIXTURE_TEST_CASE( MultiplePmlInitialisation, PythonPathFixture )
+BOOST_AUTO_TEST_CASE( MultiplePmlInitialisation )
 {
   visr::pml::initialiseParameterLibrary();
 

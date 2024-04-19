@@ -17,7 +17,6 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <stdlib.h> // Use putenv() which is not in the C++ standard
 #include <iostream>
 
 #include <stdexcept>
@@ -32,98 +31,6 @@ namespace pythoncomponents
 namespace test
 {
 
-namespace // unnamed
-{
-struct PythonPathFixture
-{
-  PythonPathFixture() : mVarName{ "PYTHONPATH" }
-  {
-    // Use the path to the VISR python externals (retrieved from CMake)
-    boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-    mVariable = mVarName + std::string( "=" ) + additionalPath.string();
-
-    // Pass the path to the VISR externals via the PYTHONPATH environment
-    // variable.
-#ifdef VISR_SYSTEM_NAME_Windows
-    BOOST_ASSERT( _putenv( &mVariable[ 0 ] ) == 0 );
-#else
-    BOOST_ASSERT( putenv( &mVariable[ 0 ] ) == 0 );
-#endif
-  }
-  ~PythonPathFixture()
-  {
-#ifdef VISR_SYSTEM_NAME_Windows
-    std::string unsetCmd{ mVarName + std::string( "=" ) };
-    BOOST_ASSERT( _putenv( &unsetCmd[ 0 ] ) == 0 );
-#else
-    std::string unsetCmd{ mVarName };
-    BOOST_ASSERT( unsetenv( &unsetCmd[ 0 ] ) == 0 );
-#endif
-  }
-
-  std::string mVarName;
-  std::string mVariable;
-};
-} // unnamed namespace
-
-// Use the PYTHONPATH to locate transitive dependencies of the imported module
-// (here: The VISR external modules, e.g., 'visr') 
-// NOTE: this test must come first, because the state of the environmnent is preserved in between Python calls.
-// TODO: Consider a pythonsupport::InitialisationGuard::uninitialise() method to clean the state.
-BOOST_FIXTURE_TEST_CASE( WrapUsePYTHONPATH, PythonPathFixture )
-{
-  std::string moduleName = "testmodule";
-
-  boost::filesystem::path basePath{ CMAKE_CURRENT_SOURCE_DIR };
-  boost::filesystem::path const modulePath = basePath / "python";
-
-  pythonsupport::InitialisationGuard::initialise();
-
-  const std::size_t blockSize{64};
-  const SamplingFrequencyType samplingFrequency{48000};
-  std::size_t const numBlocks{16};
-
-  SignalFlowContext ctxt( blockSize, samplingFrequency );
-
-  // Instantiate the atomic component (implemented in Python)
-  // by a mixture or positional and keyword constructor arguments
-  Wrapper pyAtom1( ctxt, "PythonAtom", nullptr,
-                  moduleName.c_str(),
-                  "Adder",
-                  "3,", "{'width':5}",
-                  modulePath.string().c_str() );
-
-  std::stringstream errMsg;
-  bool res = rrl::checkConnectionIntegrity( pyAtom1, true, errMsg );
-  BOOST_CHECK_MESSAGE( res, errMsg.str() );
-
-  rrl::AudioSignalFlow flow( pyAtom1 );
-
-  std::size_t const numInputChannels = 15;
-  std::size_t const numOutputChannels = 5;
-
-  std::vector<SampleType*> inputPtr( numInputChannels, nullptr );
-  std::vector<SampleType*> outputPtr( numOutputChannels, nullptr );
-
-  efl::BasicMatrix<SampleType> inputData( numInputChannels, blockSize* numBlocks );
-  // TODO: Fill the input data with something useful
-
-  efl::BasicMatrix<SampleType> outputData( numOutputChannels, blockSize* numBlocks );
-
-  for( std::size_t blockIdx(0); blockIdx < numBlocks; ++blockIdx )
-  {
-    for( std::size_t idx(0); idx < numInputChannels; ++idx )
-    {
-      inputPtr[idx] = inputData.row(idx) + blockIdx*blockSize;
-    }
-    for( std::size_t idx(0); idx < numOutputChannels; ++idx )
-    {
-      outputPtr[idx] = outputData.row(idx) + blockIdx*blockSize;
-    }
-    flow.process( &inputPtr[0], &outputPtr[0] );
-  }
-}
-  
 // Wrap a Python component in a Python file (as opposed to a multi-file package)
 BOOST_AUTO_TEST_CASE( WrapSingleFileModule )
 {
@@ -133,11 +40,6 @@ BOOST_AUTO_TEST_CASE( WrapSingleFileModule )
 
   boost::filesystem::path basePath{CMAKE_CURRENT_SOURCE_DIR};
   boost::filesystem::path const modulePath = basePath / "python";
-
-  // Use the path to the VISR python externals (retrieved from CMake)
-  boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-
-  std::string const searchPath{ modulePath.string() + ", " + additionalPath.string() };
   
   const std::size_t blockSize{64};
   const SamplingFrequencyType samplingFrequency{48000};
@@ -151,7 +53,7 @@ BOOST_AUTO_TEST_CASE( WrapSingleFileModule )
                    moduleName.c_str(),
                    "PythonAdder",
                    "3,", "{'width':5}",
-                   searchPath.c_str() );
+                   modulePath.c_str() );
 
   std::stringstream errMsg;
   bool res = rrl::checkConnectionIntegrity( pyAtom1, true, errMsg );
@@ -185,7 +87,7 @@ BOOST_AUTO_TEST_CASE( WrapSingleFileModule )
 }
 
 // Wrap a Python component contained in a multi-file package)
-BOOST_FIXTURE_TEST_CASE( WrapMultiFilePackage, PythonPathFixture )
+BOOST_AUTO_TEST_CASE( WrapMultiFilePackage )
 {
   pythonsupport::InitialisationGuard::initialise();
 
@@ -193,11 +95,6 @@ BOOST_FIXTURE_TEST_CASE( WrapMultiFilePackage, PythonPathFixture )
 
   boost::filesystem::path basePath{CMAKE_CURRENT_SOURCE_DIR};
   boost::filesystem::path const modulePath = basePath / "python";
-
-  // Use the path to the VISR python externals (retrieved from CMake)
-  boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-
-  std::string const searchPath{ modulePath.string() + ", " + additionalPath.string() };
 
   const std::size_t blockSize{64};
   const SamplingFrequencyType samplingFrequency{48000};
@@ -254,11 +151,6 @@ BOOST_AUTO_TEST_CASE(WrapNestedPackage)
   boost::filesystem::path basePath{ CMAKE_CURRENT_SOURCE_DIR };
   boost::filesystem::path const modulePath = basePath / "python";
 
-  // Use the path to the VISR python externals (retrieved from CMake)
-  boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-
-  std::string const searchPath{ modulePath.string() + ", " + additionalPath.string() };
-
   const std::size_t blockSize{ 64 };
   const SamplingFrequencyType samplingFrequency{ 48000 };
   std::size_t const numBlocks{ 16 };
@@ -313,11 +205,6 @@ BOOST_AUTO_TEST_CASE(WrapNamespacedClass)
 
   boost::filesystem::path basePath{ CMAKE_CURRENT_SOURCE_DIR };
   boost::filesystem::path const modulePath = basePath / "python";
-
-  // Use the path to the VISR python externals (retrieved from CMake)
-  boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-
-  std::string const searchPath{ modulePath.string() + ", " + additionalPath.string() };
 
   const std::size_t blockSize{ 64 };
   const SamplingFrequencyType samplingFrequency{ 48000 };
@@ -374,11 +261,6 @@ BOOST_AUTO_TEST_CASE(WrapNamespacedClassSplit)
 
   boost::filesystem::path basePath{ CMAKE_CURRENT_SOURCE_DIR };
   boost::filesystem::path const modulePath = basePath / "python";
-
-  // Use the path to the VISR python externals (retrieved from CMake)
-  boost::filesystem::path additionalPath{ PYTHON_MODULE_INSTALL_DIRECTORY };
-
-  std::string const searchPath{ modulePath.string() + ", " + additionalPath.string() };
 
   const std::size_t blockSize{ 64 };
   const SamplingFrequencyType samplingFrequency{ 48000 };
