@@ -13,4 +13,17 @@ stdenv.mkDerivation rec {
     substituteInPlace CMakeLists.txt \
       --replace "\''${VISR_TOPLEVEL_INSTALL_DIRECTORY}/python" "$out/${python.sitePackages}"
   '';
+
+  preCheck = ''
+    export LD_LIBRARY_PATH=$(pwd)/lib
+    export DYLD_LIBRARY_PATH=$(pwd)/lib
+  '';
+
+  nativeCheckInputs = lib.optionals enable_python [
+    python.pkgs.numpy
+    python.pkgs.scipy
+    python.pkgs.pytest
+  ];
+
+  doCheck = true;
 }
