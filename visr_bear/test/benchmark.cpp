@@ -6,12 +6,8 @@
 
 #include "bear/api.hpp"
 #include "ear_bits/hoa.hpp"
+#include "nlohmann/json.hpp"
 #include "test_config.h"
-
-#define RAPIDJSON_HAS_STDSTRING 1
-#include "rapidjson/document.h"
-#include "rapidjson/ostreamwrapper.h"
-#include "rapidjson/writer.h"
 
 #if defined(__unix__) || defined(__unix)
 #define RT_SCHEDULING_POSIX
@@ -23,6 +19,7 @@
 #endif
 
 using namespace bear;
+using json = nlohmann::json;
 
 /// set high-priority RT scheduling; restore after
 class SetSchedRT {
@@ -204,39 +201,29 @@ void run_benchmark_print(const BenchmarkConfig &c, size_t run)
 {
   std::vector<double> times = run_benchmark(c);
 
-  rapidjson::Document d(rapidjson::kObjectType);
+  json data_json(json::value_t::object);
 
-  rapidjson::Value config_json(rapidjson::kObjectType);
-  config_json.AddMember("update_every_time", c.update_every_time, d.GetAllocator());
-  config_json.AddMember("head_track", c.head_track, d.GetAllocator());
-  config_json.AddMember("extent", c.extent, d.GetAllocator());
-  config_json.AddMember("hoa_channels_per_block", c.hoa_channels_per_block, d.GetAllocator());
+  json config_json(json::value_t::object);
+  config_json["update_every_time"] = c.update_every_time;
+  config_json["head_track"] = c.head_track;
+  config_json["extent"] = c.extent;
+  config_json["hoa_channels_per_block"] = c.hoa_channels_per_block;
 
-  config_json.AddMember("sample_rate", c.config.get_sample_rate(), d.GetAllocator());
-  config_json.AddMember(
-      "data_path", rapidjson::Value(c.config.get_data_path(), d.GetAllocator()), d.GetAllocator());
-  config_json.AddMember("period_size", c.config.get_period_size(), d.GetAllocator());
-  config_json.AddMember("fft_implementation",
-                        rapidjson::Value(c.config.get_fft_implementation(), d.GetAllocator()),
-                        d.GetAllocator());
-  config_json.AddMember("num_objects_channels", c.config.get_num_objects_channels(), d.GetAllocator());
-  config_json.AddMember(
-      "num_direct_speakers_channels", c.config.get_num_direct_speakers_channels(), d.GetAllocator());
-  config_json.AddMember("num_hoa_channels", c.config.get_num_hoa_channels(), d.GetAllocator());
+  config_json["sample_rate"] = c.config.get_sample_rate();
+  config_json["data_path"] = c.config.get_data_path();
+  config_json["period_size"] = c.config.get_period_size();
+  config_json["fft_implementation"] = c.config.get_fft_implementation();
+  config_json["num_objects_channels"] = c.config.get_num_objects_channels();
+  config_json["num_direct_speakers_channels"] = c.config.get_num_direct_speakers_channels();
+  config_json["num_hoa_channels"] = c.config.get_num_hoa_channels();
 
-  d.AddMember("config", std::move(config_json), d.GetAllocator());
+  data_json["config"] = std::move(config_json);
 
-  d.AddMember("run", run, d.GetAllocator());
+  data_json["run"] = run;
 
-  rapidjson::Value times_json(rapidjson::kArrayType);
-  for (double time : times) times_json.PushBack(time, d.GetAllocator());
+  data_json["times"] = times;
 
-  d.AddMember("times", std::move(times_json), d.GetAllocator());
-
-  rapidjson::OStreamWrapper osw(std::cout);
-  rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-  d.Accept(writer);
-  std::cout << "\n";
+  std::cout << data_json << "\n";
 }
 
 int main(int, char **)

@@ -5,12 +5,12 @@
 namespace bear {
 int get_data_file_version(tensorfile::TensorFile &tf)
 {
-  auto it = tf.metadata.FindMember("bear_data_version");
-  if (it == tf.metadata.MemberEnd()) return 0;
+  auto it = tf.metadata.find("bear_data_version");
+  if (it == tf.metadata.end()) return 0;
 
-  if (!it->value.IsInt()) throw std::runtime_error("version must be an integer");
+  if (!it->is_number_integer()) throw std::runtime_error("version must be an integer");
 
-  return it->value.GetInt();
+  return it->template get<int>();
 }
 
 void check_data_file_version(tensorfile::TensorFile &tf)

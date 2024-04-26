@@ -286,7 +286,7 @@ Renderer::~Renderer() = default;
 
 class DataFileMetadataImpl {
  public:
-  rapidjson::Value metadata;
+  nlohmann::json metadata;
 
   bool has_metadata = false;
   std::string label;
@@ -295,34 +295,34 @@ class DataFileMetadataImpl {
 };
 
 namespace {
-  std::string parse_label(rapidjson::Value &metadata)
+  std::string parse_label(const nlohmann::json &metadata)
   {
-    auto it = metadata.FindMember("label");
-    if (it == metadata.MemberEnd()) throw std::runtime_error("expected label");
+    auto it = metadata.find("label");
+    if (it == metadata.end()) throw std::runtime_error("expected label");
 
-    if (!it->value.IsString()) throw std::runtime_error("label should be a string");
+    if (!it->is_string()) throw std::runtime_error("label should be a string");
 
-    return it->value.GetString();
+    return it->template get<std::string>();
   }
 
-  std::string parse_description(rapidjson::Value &metadata)
+  std::string parse_description(const nlohmann::json &metadata)
   {
-    auto it = metadata.FindMember("description");
-    if (it == metadata.MemberEnd()) return "";
+    auto it = metadata.find("description");
+    if (it == metadata.end()) return "";
 
-    if (!it->value.IsString()) throw std::runtime_error("description should be a string");
+    if (!it->is_string()) throw std::runtime_error("description should be a string");
 
-    return it->value.GetString();
+    return it->template get<std::string>();
   }
 
-  bool parse_released(rapidjson::Value &metadata)
+  bool parse_released(const nlohmann::json &metadata)
   {
-    auto it = metadata.FindMember("released");
-    if (it == metadata.MemberEnd()) throw std::runtime_error("expected released");
+    auto it = metadata.find("released");
+    if (it == metadata.end()) throw std::runtime_error("expected released");
 
-    if (!it->value.IsBool()) throw std::runtime_error("released should be a bool");
+    if (!it->is_boolean()) throw std::runtime_error("released should be a bool");
 
-    return it->value.GetBool();
+    return it->template get<bool>();
   }
 }  // namespace
 
@@ -338,13 +338,13 @@ DataFileMetadata DataFileMetadata::read_from_file(const std::string &path)
 
   auto impl = std::make_unique<DataFileMetadataImpl>();
 
-  auto it = tf.metadata.FindMember("metadata");
-  if (it != tf.metadata.MemberEnd()) {
-    if (!it->value.IsObject()) throw std::runtime_error("data file metadata should be object");
+  auto it = tf.metadata.find("metadata");
+  if (it != tf.metadata.end()) {
+    if (!it->is_object()) throw std::runtime_error("data file metadata should be object");
 
     impl->has_metadata = true;
 
-    impl->metadata = it->value;
+    impl->metadata = *it;
 
     impl->label = parse_label(impl->metadata);
     impl->description = parse_description(impl->metadata);

@@ -6,7 +6,6 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include "mio.hpp"
-#include "rapidjson/error/en.h"
 
 namespace tensorfile {
 
@@ -176,19 +175,17 @@ namespace detail {
 
 }  // namespace detail
 
-std::shared_ptr<NDArray> TensorFile::unpack(const rapidjson::Value &v) const
+std::shared_ptr<NDArray> TensorFile::unpack(const nlohmann::json &v) const
 {
-  if (std::string(v["_tenf_type"].GetString()) == "array") {
-    std::vector<size_t> shape;
-    for (auto &shape_ax : v["shape"].GetArray()) shape.push_back(shape_ax.GetUint64());
+  if (std::string(v.at("_tenf_type").template get<std::string>()) == "array") {
+    std::vector<size_t> shape = v.at("shape").template get<std::vector<size_t>>();
 
-    std::vector<size_t> strides;
-    for (auto &stride : v["strides"].GetArray()) strides.push_back(stride.GetUint64());
+    std::vector<size_t> strides = v.at("strides").template get<std::vector<size_t>>();
 
     if (strides.size() != shape.size()) throw format_error("mismatched strides and shape");
 
-    std::string dtype(v["dtype"].GetString());
-    size_t offset = v["base"].GetInt64();
+    std::string dtype = v.at("dtype").template get<std::string>();
+    size_t offset = v.at("base").template get<size_t>();
 
     auto type_handler = detail::get_type_handler(dtype);
     return (*type_handler)(std::move(dtype), std::move(shape), std::move(strides), mmap, offset);
@@ -215,13 +212,13 @@ TensorFile read(const std::string &path)
   if (mmap->length() < header_len + data_len + metadata_len) throw format_error("file not long enough");
   if (metadata_len == 0) throw format_error("no JSON metadata found");
 
-  rapidjson::Document metadata;
-  metadata.Parse((char *)data + header_len + data_len, metadata_len);
-  if (metadata.HasParseError()) {
-    std::stringstream err;
-    err << "could not parse JSON metadata at " << metadata.GetErrorOffset() << ": "
-        << GetParseError_En(metadata.GetParseError());
-    throw format_error(err.str());
+  const char *metadata_start = reinterpret_cast<const char *>(data) + header_len + data_len;
+  const char *metadata_end = metadata_start + metadata_len;
+  nlohmann::json metadata;
+  try {
+    metadata = nlohmann::json::parse(metadata_start, metadata_end);
+  } catch (const nlohmann::json::parse_error &e) {
+    throw format_error(std::string{"could not parse JSON metadata: "} + e.what());
   }
 
   return TensorFile(std::move(mmap), std::move(metadata));
