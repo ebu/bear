@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "rapidjson/document.h"
+#include "nlohmann/json.hpp"
 
 namespace tensorfile {
 
@@ -82,16 +82,16 @@ struct NDArrayT : public NDArray {
 
 class TensorFile {
  public:
-  TensorFile(std::shared_ptr<MMap> mmap, rapidjson::Document metadata)
+  TensorFile(std::shared_ptr<MMap> mmap, nlohmann::json metadata)
       : metadata(std::move(metadata)), mmap(std::move(mmap))
   {
   }
-  rapidjson::Document metadata;
+  nlohmann::json metadata;
 
-  std::shared_ptr<NDArray> unpack(const rapidjson::Value &v) const;
+  std::shared_ptr<NDArray> unpack(const nlohmann::json &v) const;
 
   template <typename T>
-  std::shared_ptr<NDArrayT<T>> unpack(const rapidjson::Value &v) const
+  std::shared_ptr<NDArrayT<T>> unpack(const nlohmann::json &v) const
   {
     return std::dynamic_pointer_cast<NDArrayT<T>>(unpack(v));
   }

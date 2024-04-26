@@ -1,4 +1,4 @@
-{ lib, stdenv, src, cmake, ninja, boost, python, visr ? null, visr_python ? null, data_files, eigen, libear, rapidjson, enable_python ? true }:
+{ lib, stdenv, src, cmake, ninja, boost, python, visr ? null, visr_python ? null, data_files, eigen, libear, nlohmann_json, enable_python ? true }:
 stdenv.mkDerivation rec {
   name = "visr_bear";
   inherit src;
@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
     boost
     eigen
     libear
-    rapidjson
+    nlohmann_json
   ] ++ (if enable_python then [ python visr_python ] else [ visr ]);
   cmakeFlags = [
     "-DBEAR_UNIT_TESTS=true"
@@ -16,7 +16,6 @@ stdenv.mkDerivation rec {
     "-DBEAR_DATA_PATH_DEFAULT_SMALL=${data_files.default_small.file}"
     "-DBEAR_SYMLINK_DATA_FILES=true"
     "-DBEAR_USE_INTERNAL_LIBEAR=false"
-    "-DBEAR_USE_INTERNAL_RAPIDJSON=false"
   ] ++ lib.optional (!enable_python) "-DBUILD_PYTHON_BINDINGS=false";
   preConfigure = ''cmakeFlags="$cmakeFlags -DBEAR_PYTHON_SITE_PACKAGES=$out/${python.sitePackages}"'';
 

@@ -5,7 +5,7 @@
 using namespace tensorfile;
 
 template <typename T>
-void check_one_multi_dim(const TensorFile &tenf, const rapidjson::Value &v)
+void check_one_multi_dim(const TensorFile &tenf, const nlohmann::json &v)
 {
   auto ndarray = tenf.unpack(v);
   auto ndarray_f = std::dynamic_pointer_cast<NDArrayT<T>>(ndarray);

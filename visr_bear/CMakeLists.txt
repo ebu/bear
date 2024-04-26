@@ -90,18 +90,7 @@ if(NOT BEAR_USE_INTERNAL_LIBEAR)
   find_package(Eigen3 REQUIRED)
 endif()
 
-option(
-  BEAR_USE_INTERNAL_RAPIDJSON
-  "should we use our own version of RapidJSON, or find one with find_package?"
-  ON)
-if(NOT BEAR_USE_INTERNAL_RAPIDJSON)
-  find_package(RapidJSON REQUIRED)
-  if(NOT TARGET RapidJSON)
-    # rapidjson cmake currently doesn't export a target
-    add_library(RapidJSON INTERFACE)
-    target_include_directories(RapidJSON INTERFACE ${RAPIDJSON_INCLUDE_DIRS})
-  endif()
-endif()
+find_package(nlohmann_json 3.11.0 REQUIRED)
 
 find_package(Boost REQUIRED)
 

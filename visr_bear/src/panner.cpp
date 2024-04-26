@@ -3,41 +3,43 @@
 #include "data_file.hpp"
 #include "utils.hpp"
 
+using json = nlohmann::json;
+
 namespace {
-ear::PolarPosition load_position(const rapidjson::Value &position_j)
+ear::PolarPosition load_position(const json &position_j)
 {
-  return {position_j["azimuth"].GetDouble(),
-          position_j["elevation"].GetDouble(),
-          position_j["distance"].GetDouble()};
+  return {position_j.at("azimuth").template get<double>(),
+          position_j.at("elevation").template get<double>(),
+          position_j.at("distance").template get<double>()};
 }
 
-ear::Channel load_channel(const rapidjson::Value &channel_j)
+ear::Channel load_channel(const json &channel_j)
 {
   ear::Channel channel;
-  channel.name(channel_j["name"].GetString());
+  channel.name(channel_j.at("name").template get<std::string>());
 
-  channel.polarPosition(load_position(channel_j["polar_position"]));
-  channel.polarPositionNominal(load_position(channel_j["polar_nominal_position"]));
+  channel.polarPosition(load_position(channel_j.at("polar_position")));
+  channel.polarPositionNominal(load_position(channel_j.at("polar_nominal_position")));
 
-  const auto &az_range_j = channel_j["az_range"].GetArray();
-  channel.azimuthRange({{az_range_j[0].GetDouble(), az_range_j[1].GetDouble()}});
+  auto az_range = channel_j.at("az_range").template get<std::pair<double, double>>();
+  channel.azimuthRange(az_range);
 
-  const auto &el_range_j = channel_j["el_range"].GetArray();
-  channel.elevationRange({{el_range_j[0].GetDouble(), el_range_j[1].GetDouble()}});
+  auto el_range = channel_j.at("el_range").template get<std::pair<double, double>>();
+  channel.elevationRange(el_range);
 
-  channel.isLfe(channel_j["is_lfe"].GetBool());
+  channel.isLfe(channel_j.at("is_lfe").get<bool>());
 
   return channel;
 }
 
-ear::Layout load_layout(const rapidjson::Value &layout_j)
+ear::Layout load_layout(const json &layout_j)
 {
-  std::vector<ear::Channel> channels;
-  for (auto &channel_j : layout_j["channels"].GetArray()) {
-    channels.push_back(load_channel(channel_j));
-  }
+  const json::array_t &channels_j = layout_j.at("channels").template get_ref<const json::array_t &>();
 
-  return {layout_j["name"].GetString(), channels};
+  std::vector<ear::Channel> channels;
+  for (const auto &channel_j : channels_j) channels.push_back(load_channel(channel_j));
+
+  return {layout_j.at("name").template get<std::string>(), channels};
 }
 
 void check(bool x, const std::string &message)
@@ -55,13 +57,13 @@ Panner::Panner(const std::string &brir_file_name)
 
   check_data_file_version(tf);
 
-  views = tf.unpack<float>(tf.metadata["views"]);
-  brirs = tf.unpack<float>(tf.metadata["brirs"]);
-  delays = tf.unpack<float>(tf.metadata["delays"]);
-  decorrelation_filters = tf.unpack<float>(tf.metadata["decorrelation_filters"]);
-  fs = tf.metadata["fs"].GetDouble();
-  decorrelation_delay_ = tf.metadata["decorrelation_delay"].GetDouble();
-  front_loudspeaker_ = tf.metadata["front_loudspeaker"].GetUint();
+  views = tf.unpack<float>(tf.metadata.at("views"));
+  brirs = tf.unpack<float>(tf.metadata.at("brirs"));
+  delays = tf.unpack<float>(tf.metadata.at("delays"));
+  decorrelation_filters = tf.unpack<float>(tf.metadata.at("decorrelation_filters"));
+  fs = tf.metadata.at("fs").template get<double>();
+  decorrelation_delay_ = tf.metadata.at("decorrelation_delay").template get<double>();
+  front_loudspeaker_ = tf.metadata.at("front_loudspeaker").template get<size_t>();
 
   // check and unpack dimensions
   check(views->ndim() == 2, "views must have 2 dimensions");
@@ -93,11 +95,11 @@ Panner::Panner(const std::string &brir_file_name)
 
   // load layout
   ear::Layout layout;
-  if (tf.metadata["layout"].IsString()) {
-    std::string layout_name = tf.metadata["layout"].GetString();
+  if (tf.metadata.at("layout").is_string()) {
+    std::string layout_name = tf.metadata.at("layout").template get<std::string>();
     layout = ear::getLayout(layout_name).withoutLfe();
   } else {
-    layout = load_layout(tf.metadata["layout"]);
+    layout = load_layout(tf.metadata.at("layout"));
   }
 
   // make gain calculators
@@ -110,9 +112,9 @@ Panner::Panner(const std::string &brir_file_name)
   temp_direct_diffuse.resize(num_gains() * 2);
   temp_direct_speakers.resize(num_gains());
 
-  if (tf.metadata.HasMember("gain_norm_quick")) {
+  if (tf.metadata.contains("gain_norm_quick")) {
     gain_comp_type = GainCompType::QUICK;
-    gain_comp_factors = tf.unpack<float>(tf.metadata["gain_norm_quick"]["factors"]);
+    gain_comp_factors = tf.unpack<float>(tf.metadata.at("gain_norm_quick").at("factors"));
     check(gain_comp_factors->ndim() == 5, "gain comp factors must have 5 dimensions");
     // TODO: check max delays?
     check(gain_comp_factors->shape(1) == n_views_, "gain comp factors axis 1 is wrong size");
@@ -123,13 +125,14 @@ Panner::Panner(const std::string &brir_file_name)
     check(gain_comp_factors->shape(4) == 2, "gain comp factors axis 4 is wrong size");
   }
 
-  check(tf.metadata.HasMember("hoa"), "HOA decoder not present");
-  hoa_irs = tf.unpack<float>(tf.metadata["hoa"]["irs"]);
+  check(tf.metadata.contains("hoa"), "HOA decoder not present");
+  hoa_irs = tf.unpack<float>(tf.metadata.at("hoa").at("irs"));
   check(hoa_irs->ndim() == 3, "HOA decoder must have 3 dimensions");
   n_hoa_channels_ = hoa_irs->shape(0);
   check(hoa_irs->shape(1) == 2, "HOA decoder axis 1 is wrong size");
 
-  if (tf.metadata["hoa"].HasMember("delay")) hoa_delay_ = tf.metadata["hoa"]["delay"].GetDouble();
+  if (tf.metadata.at("hoa").contains("delay"))
+    hoa_delay_ = tf.metadata.at("hoa").at("delay").template get<double>();
 
   hoa_order_ = ((size_t)std::round(std::sqrt(n_hoa_channels_))) - 1;
   size_t nch_for_order = (hoa_order_ + 1) * (hoa_order_ + 1);

@@ -20,7 +20,7 @@ namespace python {
   {
     init_parameters();
 
-    // make Config convertable to ConfigImpl; this is what the internals use,
+    // make Config convertible to ConfigImpl; this is what the internals use,
     // and this means that there's only one config interface on the python side
     // where we don't need to care about ABI compatibility.
     py::class_<ConfigImpl>(m, "_ConfigImpl").def(py::init([](const Config &config) {

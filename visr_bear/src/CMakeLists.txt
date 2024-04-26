@@ -2,7 +2,7 @@
 # internals (test,
 add_library(bear-internals INTERFACE)
 target_link_libraries(bear-internals INTERFACE mio)
-target_link_libraries(bear-internals INTERFACE RapidJSON)
+target_link_libraries(bear-internals INTERFACE nlohmann_json::nlohmann_json)
 target_link_libraries(bear-internals INTERFACE Eigen3::Eigen)
 target_include_directories(bear-internals INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
